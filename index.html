@@ -187,6 +187,11 @@ audio{width:100%;border-radius:10px;margin-top:8px}
         <button class="btn-ghost" onclick="addAction()">+ Action Item 추가</button>
       </div>
       <div class="sec"><label>다음 회의 일정</label><input type="text" id="nextMeeting" placeholder="예: 2025년 4월 5일 14:00"></div>
+      <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid #eee;display:flex;gap:8px;align-items:center">
+        <button class="btn-sm" id="translateBtn" onclick="translateToEnglish()" style="background:#f0f7ff;border-color:#b3d4f5;color:#1a5fa8;font-weight:500">🌐 영문으로 변환</button>
+        <span style="font-size:12px;color:#aaa">현재 내용을 영어로 번역합니다</span>
+      </div>
+      <div id="translateLoading" style="display:none" class="loading-row"><div class="spinner"></div> 영문으로 번역 중...</div>
     </div>
 
     <!-- STEP 4: 저장 & 내보내기 -->
@@ -199,10 +204,7 @@ audio{width:100%;border-radius:10px;margin-top:8px}
         <div class="step-label active">저장 &amp; 공유</div>
       </div>
       <button class="btn-green" onclick="saveToFirebase()">☁️ Firebase에 저장하기</button>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn-pdf" style="flex:1;margin-top:0" onclick="exportPDF('ko')">PDF 한국어</button>
-        <button class="btn-pdf" style="flex:1;margin-top:0;background:#34495e" onclick="exportPDF('en')">PDF English</button>
-      </div>
+      <button class="btn-pdf" onclick="exportPDF()" style="margin-top:8px">PDF 다운로드</button>
       <button class="btn-kakao" onclick="shareKakao()">카카오톡으로 PDF 공유</button>
     </div>
 
@@ -484,7 +486,72 @@ Reply ONLY with valid JSON (no markdown):
   }
 }
 
-/* ── Groq 공통 호출 ── */
+/* ── 영문 번역 ── */
+window.translateToEnglish = async function(){
+  const purpose   = document.getElementById('purpose').value.trim();
+  const discussion= document.getElementById('discussion').value.trim();
+  const decisions = document.getElementById('decisions').value.trim();
+  const nextMeet  = document.getElementById('nextMeeting').value.trim();
+  const actions   = Array.from(document.querySelectorAll('#actionList input')).map(i=>i.value).filter(Boolean);
+  const note      = document.getElementById('noteBox')?.textContent?.trim()||'';
+
+  if(!purpose && !discussion){ showToast('번역할 내용이 없습니다'); return; }
+
+  document.getElementById('translateBtn').disabled=true;
+  document.getElementById('translateLoading').style.display='flex';
+
+  const prompt=`Translate the following meeting minutes content into professional English.
+Keep all formatting, bullet points, and structure exactly the same.
+Only translate the text — do not add or remove any information.
+
+Reply ONLY with valid JSON (no markdown):
+{
+  "note": "translated note or empty",
+  "purpose": "translated purpose",
+  "discussion": "translated discussion",
+  "decisions": "translated decisions",
+  "actions": ["translated action 1", "translated action 2"],
+  "nextMeeting": "translated next meeting"
+}
+
+Content to translate:
+- Note: ${note}
+- Purpose: ${purpose}
+- Discussion: ${discussion}
+- Decisions: ${decisions}
+- Actions: ${actions.join(' | ')}
+- Next Meeting: ${nextMeet}`;
+
+  try{
+    const raw = await groqCall(prompt, 1500);
+    let p;
+    try{ p=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch{ showToast('번역 오류. 다시 시도해주세요.'); return; }
+
+    if(p.note && document.getElementById('noteBox'))
+      document.getElementById('noteBox').textContent = p.note;
+    document.getElementById('purpose').value    = p.purpose||'';
+    document.getElementById('discussion').value = p.discussion||'';
+    document.getElementById('decisions').value  = p.decisions||'';
+    document.getElementById('nextMeeting').value= p.nextMeeting||'';
+
+    // action items 교체
+    document.getElementById('actionList').innerHTML='';
+    const acts = p.actions||actions;
+    acts.forEach(a=>addAction(a));
+
+    // 언어 뱃지 변경
+    const b=document.getElementById('langBadge');
+    b.textContent='English'; b.className='badge badge-en';
+
+    showToast('영문 번역 완료!');
+  }catch(e){
+    showToast('번역 오류: '+e.message);
+  }finally{
+    document.getElementById('translateBtn').disabled=false;
+    document.getElementById('translateLoading').style.display='none';
+  }
+};
 async function groqCall(prompt, maxTokens=1000){
   const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
@@ -573,8 +640,7 @@ async function renderList(){
         <div class="minutes-meta">${m.date||''} ${m.attendees?'· '+m.attendees:''}</div>
         <div class="minutes-btns">
           <button class="btn-sm" onclick="loadMinutes('${m.id}')">불러오기</button>
-          <button class="btn-sm" onclick="downloadPDF('${m.id}','ko')">PDF 한국어</button>
-          <button class="btn-sm" onclick="downloadPDF('${m.id}','en')">PDF English</button>
+          <button class="btn-sm" onclick="downloadPDF('${m.id}')">PDF</button>
           <button class="btn-sm" onclick="shareItem('${m.id}')">카카오톡</button>
           <button class="btn-sm-danger" onclick="deleteMinutes('${m.id}')">삭제</button>
         </div>
@@ -615,78 +681,67 @@ window.downloadPDF=function(id){ const m=(window._cache||[]).find(x=>x.id===id);
 window.shareItem=async function(id){ const m=(window._cache||[]).find(x=>x.id===id); if(m) await doShare(m); };
 
 /* ── PDF ── */
-async function buildDoc(m, lang='ko'){
-  const isKo = lang==='ko';
-  const labels = isKo
-    ? {note:'미팅 노트', purpose:'회의 목적', discussion:'주요 논의 내용', decisions:'결정 사항', actions:'Action Items', next:'다음 회의 일정', attendees:'참석자'}
-    : {note:'Meeting Notes', purpose:'Meeting Purpose', discussion:'Key Discussion', decisions:'Decisions', actions:'Action Items', next:'Next Meeting', attendees:'Attendees'};
-
-  const el = document.createElement('div');
-  el.style.cssText = `
-    width:794px; padding:40px; font-family:'Apple SD Gothic Neo','Malgun Gothic','NanumGothic',sans-serif;
-    background:#fff; color:#222; position:fixed; left:-9999px; top:0;
-  `;
-  const actions = (m.actions||[]).length
-    ? (m.actions).map((a,i)=>`<div style="margin:4px 0">${i+1}. ${a}</div>`).join('')
-    : '—';
-  el.innerHTML = `
+function buildPrintDiv(m){
+  const d=document.createElement('div');
+  d.style.cssText='width:794px;padding:40px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#1a1a1a;';
+  const esc=s=>(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const sec=(title,content)=>content?`
+    <div style="margin-bottom:18px">
+      <div style="background:#2c3e50;color:#fff;padding:7px 12px;font-size:13px;font-weight:600;border-radius:6px 6px 0 0">${esc(title)}</div>
+      <div style="border:1px solid #ddd;border-top:none;padding:12px;font-size:13px;line-height:1.8;white-space:pre-wrap;border-radius:0 0 6px 6px">${esc(content)}</div>
+    </div>`:'';
+  d.innerHTML=`
     <div style="background:#2c3e50;color:#fff;padding:20px 24px;border-radius:10px;margin-bottom:24px">
-      <div style="font-size:22px;font-weight:700;margin-bottom:6px">${m.title||'Meeting Minutes'}</div>
-      <div style="font-size:13px;opacity:.85">${m.date||''}</div>
-      <div style="font-size:13px;opacity:.85">${labels.attendees}: ${m.attendees||'—'}</div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:6px">${esc(m.title||'Meeting Minutes')}</div>
+      <div style="font-size:13px;opacity:.85">${esc(m.date||'')} ${m.attendees?'&nbsp;|&nbsp; 참석자: '+esc(m.attendees):''}</div>
     </div>
-    ${m.note ? sec(labels.note, m.note.replace(/\n/g,'<br>')) : ''}
-    ${sec(labels.purpose, (m.purpose||'—').replace(/\n/g,'<br>'))}
-    ${sec(labels.discussion, (m.discussion||'—').replace(/\n/g,'<br>'))}
-    ${sec(labels.decisions, (m.decisions||'—').replace(/\n/g,'<br>'))}
-    ${sec(labels.actions, actions)}
-    ${sec(labels.next, (m.nextMeeting||'—').replace(/\n/g,'<br>'))}
-    <div style="margin-top:24px;font-size:11px;color:#aaa;text-align:right">Generated by Meeting Minutes Tool</div>
-  `;
-  document.body.appendChild(el);
+    ${sec('미팅 노트',m.note)}
+    ${sec('회의 목적',m.purpose)}
+    ${sec('주요 논의 내용',m.discussion)}
+    ${sec('결정 사항',m.decisions)}
+    ${sec('Action Items',(m.actions||[]).map((a,i)=>`${i+1}. ${a}`).join('\n'))}
+    ${sec('다음 회의 일정',m.nextMeeting)}
+    <div style="margin-top:24px;font-size:11px;color:#aaa;text-align:right">Generated by Meeting Minutes Tool</div>`;
+  return d;
+}
 
-  function sec(title, content){
-    return `
-      <div style="margin-bottom:18px">
-        <div style="background:#e8ecf0;color:#2c3e50;font-size:12px;font-weight:700;
-             padding:6px 10px;border-radius:6px;margin-bottom:8px;letter-spacing:.5px">
-          ${title}
-        </div>
-        <div style="font-size:14px;line-height:1.8;padding:0 4px;color:#333">${content}</div>
-      </div>`;
+async function makePDFfromHTML(m){
+  const {jsPDF}=window.jspdf;
+  const div=buildPrintDiv(m);
+  div.style.position='fixed'; div.style.left='-9999px'; div.style.top='0';
+  document.body.appendChild(div);
+  try{
+    const canvas=await html2canvas(div,{scale:2,useCORS:true,backgroundColor:'#fff'});
+    const imgW=210, pageH=297;
+    const imgH=canvas.height*imgW/canvas.width;
+    const doc=new jsPDF({unit:'mm',format:'a4'});
+    let yPos=0, pageNum=0;
+    while(yPos<imgH){
+      if(pageNum>0) doc.addPage();
+      doc.addImage(canvas.toDataURL('image/png'),'PNG',0,-yPos,imgW,imgH);
+      yPos+=pageH; pageNum++;
+    }
+    return doc;
+  }finally{
+    document.body.removeChild(div);
   }
-
-  const canvas = await html2canvas(el, {scale:2, useCORS:true, backgroundColor:'#ffffff'});
-  document.body.removeChild(el);
-
-  const {jsPDF} = window.jspdf;
-  const imgW = 210;
-  const imgH = (canvas.height * imgW) / canvas.width;
-  const pdf = new jsPDF({unit:'mm', format:'a4'});
-  const pageH = 297;
-  let pos = 0;
-  while(pos < imgH){
-    if(pos > 0) pdf.addPage();
-    pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG', 0, -pos, imgW, imgH);
-    pos += pageH;
-  }
-  return pdf;
 }
 
-async function makePDF(m, lang='ko'){
-  const pdf = await buildDoc(m, lang);
-  const suffix = lang==='ko'?'_한국어':'_English';
-  pdf.save((m.title||'minutes').replace(/\s+/g,'_')+suffix+'_minutes.pdf');
-  showToast('PDF가 다운로드 폴더에 저장됐습니다!');
+async function makePDF(m){
+  showToast('PDF 생성 중...');
+  try{
+    const doc=await makePDFfromHTML(m);
+    doc.save((m.title||'minutes').replace(/\s+/g,'_')+'_minutes.pdf');
+    showToast('PDF가 다운로드 폴더에 저장됐습니다!');
+  }catch(e){ showToast('PDF 오류: '+e.message); }
 }
 
-async function makePDFBlob(m, lang='ko'){
-  const pdf = await buildDoc(m, lang);
-  return pdf.output('blob');
+async function makePDFBlob(m){
+  const doc=await makePDFfromHTML(m);
+  return doc.output('blob');
 }
 
-window.exportPDF=async function(lang='ko'){ await makePDF(getFormData(), lang); };
-window.downloadPDF=async function(id, lang='ko'){ const m=(window._cache||[]).find(x=>x.id===id); if(m) await makePDF(m, lang); };
+window.exportPDF=async function(){ await makePDF(getFormData()); };
 
 async function doShare(m){
   const blob=makePDFBlob(m);
