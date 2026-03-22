@@ -19,6 +19,8 @@ input[type=text],textarea{width:100%;padding:10px 12px;border:0.5px solid #ddd;b
 input:focus,textarea:focus{border-color:#555;background:#fff}
 textarea{resize:vertical;line-height:1.6}
 .date-val{padding:10px 12px;background:#f0f0f0;border-radius:10px;font-size:15px;color:#555}
+.api-steps{background:#f0f7ff;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:13px;color:#333;line-height:1.9}
+.api-steps a{color:#1a6fa8}
 .rec-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:4px 0 8px}
 .rec-btn{width:78px;height:78px;border-radius:50%;border:none;background:#e74c3c;color:#fff;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .rec-btn.on{animation:pulse 1.4s infinite}
@@ -54,7 +56,20 @@ audio{width:100%;border-radius:10px;margin-top:8px}
 
   <div class="card">
     <h1>Meeting Minutes</h1>
-    <p class="sub">녹음 → 텍스트 변환 → AI 회의록 자동 생성</p>
+    <p class="sub">녹음 → 텍스트 변환 → AI 회의록 자동 생성 (Groq)</p>
+  </div>
+
+  <!-- Groq API 안내 -->
+  <div class="card">
+    <h2>Groq API 설정</h2>
+    <div class="api-steps">
+      <strong>무료 키 발급 방법 (2분)</strong><br>
+      1. <a href="https://console.groq.com" target="_blank">console.groq.com</a> 접속<br>
+      2. 회원가입 (Google 계정 가능)<br>
+      3. 좌측 메뉴 <strong>API Keys</strong> → <strong>Create API Key</strong><br>
+      4. 생성된 <strong>gsk_...</strong> 키를 index.html의 아래 위치에 입력<br>
+      <span style="color:#888">* 무료 티어: 분당 30회, 하루 14,400회</span>
+    </div>
   </div>
 
   <!-- 기본 정보 -->
@@ -96,7 +111,7 @@ audio{width:100%;border-radius:10px;margin-top:8px}
   <div class="card" id="loadCard" style="display:none">
     <div style="text-align:center;padding:12px">
       <div class="spinner"></div>
-      <p style="color:#888;font-size:14px" id="loadMsg">AI가 회의 내용을 분석 중...</p>
+      <p style="color:#888;font-size:14px">AI가 회의 내용을 분석 중...</p>
     </div>
   </div>
 
@@ -125,8 +140,11 @@ audio{width:100%;border-radius:10px;margin-top:8px}
 <div class="toast" id="toast"></div>
 
 <script>
-/* ── 설정: API 키를 여기에 입력 ── */
-const GEMINI_API_KEY = 'AIzaSyCXBbUIQsEDcHR7orKu361Bok9v2v2f2yU';
+/* ═══════════════════════════════════════
+   API 키 설정 — 여기에 Groq 키를 입력하세요
+   console.groq.com → API Keys → Create API Key
+   ═══════════════════════════════════════ */
+const GROQ_API_KEY = 'YOUR_GROQ_API_KEY';
 
 /* ── 날짜 ── */
 document.getElementById('meetingDate').textContent =
@@ -216,12 +234,17 @@ function stopSTT(){
   document.getElementById('sttState').textContent='';
 }
 
-/* ── Gemini API 호출 ── */
+/* ── Groq API 호출 ── */
 async function runAI(src){
   const text = src==='manual'
     ? document.getElementById('manualText').value.trim()
     : finalText.trim();
   if(!text){ showToast('변환할 텍스트가 없습니다'); return; }
+
+  if(!GROQ_API_KEY || GROQ_API_KEY==='YOUR_GROQ_API_KEY'){
+    showErr('Groq API 키를 index.html에 입력해주세요.\nconsole.groq.com → API Keys → Create API Key');
+    return;
+  }
 
   const title=document.getElementById('meetingTitle').value||'TS LT Meeting';
   const date=document.getElementById('meetingDate').textContent;
@@ -242,53 +265,44 @@ Reply ONLY with valid JSON (no markdown, no code block, no explanation):
 {"language":"Korean or English","purpose":"...","discussion":"...","decisions":"...","actions":[{"task":"...","owner":"...","due":"..."}],"nextMeeting":"..."}
 Use the same language as the transcript.`;
 
-  // 시도할 모델 목록
-  const models=[
-    'gemini-2.0-flash-exp',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-8b',
-    'gemini-1.5-flash-002',
-    'gemini-1.5-flash-001',
-    'gemini-1.0-pro'
-  ];
+  try{
+    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+GROQ_API_KEY
+      },
+      body:JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        messages:[
+          {role:'system', content:'You are a professional meeting minutes assistant. Always respond with valid JSON only.'},
+          {role:'user', content:prompt}
+        ],
+        temperature:0.3,
+        max_tokens:1500
+      })
+    });
 
-  let lastErr='';
-  for(const model of models){
-    try{
-      const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-      const resp=await fetch(url,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          contents:[{parts:[{text:prompt}]}],
-          generationConfig:{temperature:0.3,maxOutputTokens:1500}
-        })
-      });
-      const data=await resp.json();
-      if(!resp.ok){
-        lastErr=data?.error?.message||`HTTP ${resp.status}`;
-        // not found면 다음 모델 시도
-        if(lastErr.includes('not found')||lastErr.includes('not supported')) continue;
-        throw new Error(lastErr);
-      }
-      const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-      let p;
-      try{ p=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
-      catch{ p={language:'Korean',purpose:'',discussion:raw,decisions:'',actions:[],nextMeeting:''}; }
-      fillForm(p);
-      document.getElementById('loadCard').style.display='none';
-      document.getElementById('editCard').style.display='block';
-      document.getElementById('exportCard').style.display='block';
-      showToast(`회의록 생성 완료! (${model})`);
-      return;
-    }catch(e){
-      lastErr=e.message;
-      if(e.message.includes('not found')||e.message.includes('not supported')) continue;
-      break;
+    if(!resp.ok){
+      const err=await resp.json();
+      throw new Error(err?.error?.message||`HTTP ${resp.status}`);
     }
+
+    const data=await resp.json();
+    const raw=data.choices?.[0]?.message?.content||'';
+    let p;
+    try{ p=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch{ p={language:'Korean',purpose:'',discussion:raw,decisions:'',actions:[],nextMeeting:''}; }
+
+    fillForm(p);
+    document.getElementById('loadCard').style.display='none';
+    document.getElementById('editCard').style.display='block';
+    document.getElementById('exportCard').style.display='block';
+    showToast('회의록 생성 완료!');
+  }catch(e){
+    document.getElementById('loadCard').style.display='none';
+    showErr('API 오류: '+e.message);
   }
-  document.getElementById('loadCard').style.display='none';
-  showErr('API 오류: '+lastErr+'\n\nAPI 키와 Generative Language API 활성화 여부를 확인해주세요.');
 }
 
 function fillForm(p){
