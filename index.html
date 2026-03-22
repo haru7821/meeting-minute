@@ -271,16 +271,19 @@ document.getElementById('meetingDate').textContent =
    Firebase (compat 방식)
    ════════════════════════════════ */
 let db = null;
-try{
-  firebase.initializeApp(FB_CONFIG);
-  db = firebase.firestore();
-  document.getElementById('fbStatus').textContent='✓ Firebase 연결됨';
-  document.getElementById('fbStatus').className='fb-status ok';
-  updateCount();
-}catch(e){
-  document.getElementById('fbStatus').textContent='Firebase 오류: '+e.message;
-  document.getElementById('fbStatus').className='fb-status err';
+function initFirebase(){
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    db = firebase.firestore();
+    document.getElementById('fbStatus').textContent='✓ Firebase 연결됨';
+    document.getElementById('fbStatus').className='fb-status ok';
+    updateCount();
+  }catch(e){
+    document.getElementById('fbStatus').textContent='Firebase 오류: '+e.message;
+    document.getElementById('fbStatus').className='fb-status err';
+  }
 }
+window.addEventListener('load', initFirebase);
 
 /* ════════════════════════════════
    탭
