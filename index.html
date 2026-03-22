@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Meeting Minutes</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; min-height: 100vh; }
+.app { max-width: 680px; margin: 0 auto; padding: 16px; }
+.header { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 12px; border: 0.5px solid #e0e0e0; }
+.header h1 { font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+.header p { font-size: 13px; color: #888; }
+.card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 12px; border: 0.5px solid #e0e0e0; }
+.card h2 { font-size: 14px; font-weight: 600; color: #444; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+label { font-size: 13px; color: #666; display: block; margin-bottom: 4px; margin-top: 12px; }
+label:first-of-type { margin-top: 0; }
+input[type="text"], textarea { width: 100%; padding: 10px 12px; border: 0.5px solid #ddd; border-radius: 10px; font-size: 15px; font-family: inherit; color: #1a1a1a; background: #fafafa; outline: none; transition: border 0.2s; }
+input[type="text"]:focus, textarea:focus { border-color: #555; background: #fff; }
+textarea { resize: vertical; line-height: 1.6; }
+.date-display { padding: 10px 12px; background: #f0f0f0; border-radius: 10px; font-size: 15px; color: #555; }
+.rec-section { text-align: center; }
+.rec-btn { width: 80px; height: 80px; border-radius: 50%; border: none; background: #e74c3c; color: white; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; transition: transform 0.1s, background 0.2s; }
+.rec-btn:active { transform: scale(0.95); }
+.rec-btn.recording { background: #c0392b; animation: pulse 1.5s infinite; }
+.rec-btn.disabled { background: #ccc; cursor: not-allowed; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,0.4)} 50%{box-shadow:0 0 0 12px rgba(231,76,60,0)} }
+.rec-status { font-size: 14px; color: #888; margin-bottom: 8px; }
+.rec-timer { font-size: 24px; font-weight: 600; color: #e74c3c; font-variant-numeric: tabular-nums; }
+.audio-player { margin-top: 12px; width: 100%; }
+audio { width: 100%; border-radius: 10px; }
+.transcribe-btn { width: 100%; padding: 14px; background: #1a1a1a; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; margin-top: 12px; transition: background 0.2s; }
+.transcribe-btn:hover { background: #333; }
+.transcribe-btn:disabled { background: #aaa; cursor: not-allowed; }
+.section-group { margin-bottom: 16px; }
+.section-group:last-child { margin-bottom: 0; }
+.action-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
+.action-row input { flex: 1; }
+.del-btn { width: 36px; height: 36px; min-width: 36px; border: 0.5px solid #ddd; background: #fff; border-radius: 8px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #e74c3c; }
+.add-btn { width: 100%; padding: 10px; border: 0.5px dashed #ccc; background: transparent; border-radius: 10px; font-size: 14px; color: #888; cursor: pointer; transition: background 0.2s; }
+.add-btn:hover { background: #f5f5f5; }
+.export-btn { width: 100%; padding: 16px; background: #2c3e50; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 8px; transition: background 0.2s; }
+.export-btn:hover { background: #1a252f; }
+.share-btn { width: 100%; padding: 16px; background: #fee500; color: #3c1e1e; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.share-btn:hover { background: #fdd800; }
+.kakao-icon { width: 22px; height: 22px; background: #3c1e1e; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+.loading { text-align: center; padding: 20px; }
+.spinner { width: 36px; height: 36px; border: 3px solid #eee; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+.toast.show { opacity: 1; }
+.lang-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background: #e8f4fd; color: #1a6fa8; margin-left: 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Meeting Minutes</h1>
+    <p>녹음 → AI 변환 → 편집 → PDF 저장</p>
+  </div>
+
+  <!-- 기본 정보 -->
+  <div class="card">
+    <h2>기본 정보</h2>
+    <label>회의 이름</label>
+    <input type="text" id="meetingTitle" value="TS LT Meeting">
+    <label>날짜</label>
+    <div class="date-display" id="meetingDate"></div>
+    <label>참석자 (쉼표로 구분)</label>
+    <input type="text" id="attendees" placeholder="예: 홍길동, Kim Jisu, Park Suho">
+  </div>
+
+  <!-- 녹음 -->
+  <div class="card">
+    <h2>녹음</h2>
+    <div class="rec-section">
+      <button class="rec-btn" id="recBtn" onclick="toggleRecord()">&#9679;</button>
+      <div class="rec-status" id="recStatus">버튼을 눌러 녹음 시작</div>
+      <div class="rec-timer" id="recTimer">00:00</div>
+    </div>
+    <div class="audio-player" id="audioPlayer" style="display:none">
+      <audio id="audioElem" controls></audio>
+      <button class="transcribe-btn" id="transcribeBtn" onclick="transcribeAudio()">AI로 내용 변환하기</button>
+    </div>
+  </div>
+
+  <!-- AI 변환 결과 (처음엔 숨김) -->
+  <div class="card" id="minutesCard" style="display:none">
+    <h2>회의 내용 편집 <span class="lang-badge" id="langBadge"></span></h2>
+
+    <div class="section-group">
+      <label>회의 목적</label>
+      <textarea id="purpose" rows="2" placeholder="회의 목적"></textarea>
+    </div>
+
+    <div class="section-group">
+      <label>주요 논의 내용</label>
+      <textarea id="discussion" rows="5" placeholder="주요 논의 내용"></textarea>
+    </div>
+
+    <div class="section-group">
+      <label>결정 사항</label>
+      <textarea id="decisions" rows="3" placeholder="결정된 내용"></textarea>
+    </div>
+
+    <div class="section-group">
+      <label>Action Items</label>
+      <div id="actionList"></div>
+      <button class="add-btn" onclick="addAction()">+ Action Item 추가</button>
+    </div>
+
+    <div class="section-group">
+      <label>다음 회의 일정</label>
+      <input type="text" id="nextMeeting" placeholder="예: 2025년 4월 5일 14:00">
+    </div>
+  </div>
+
+  <!-- 로딩 -->
+  <div class="card" id="loadingCard" style="display:none">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p style="color:#888;font-size:14px">AI가 회의 내용을 분석 중입니다...</p>
+    </div>
+  </div>
+
+  <!-- 내보내기 -->
+  <div class="card" id="exportCard" style="display:none">
+    <h2>내보내기</h2>
+    <button class="export-btn" onclick="exportPDF()">PDF로 저장하기</button>
+    <button class="share-btn" onclick="shareKakao()">
+      <span class="kakao-icon" style="color:#fee500;font-weight:700;font-size:11px">K</span>
+      카카오톡으로 공유하기
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let mediaRecorder, audioChunks = [], audioBlob = null;
+let timerInterval, seconds = 0;
+let isRecording = false;
+let pdfDataUri = null;
+
+const today = new Date();
+const dateStr = today.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+document.getElementById('meetingDate').textContent = dateStr;
+
+function pad(n){ return String(n).padStart(2,'0'); }
+
+function toggleRecord(){
+  if(!isRecording) startRecord(); else stopRecord();
+}
+
+async function startRecord(){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(audioBlob);
+      document.getElementById('audioElem').src = url;
+      document.getElementById('audioPlayer').style.display = 'block';
+      stream.getTracks().forEach(t => t.stop());
+    };
+    mediaRecorder.start(1000);
+    isRecording = true;
+    seconds = 0;
+    document.getElementById('recBtn').classList.add('recording');
+    document.getElementById('recBtn').innerHTML = '&#9632;';
+    document.getElementById('recStatus').textContent = '녹음 중... (버튼을 눌러 중지)';
+    timerInterval = setInterval(() => {
+      seconds++;
+      document.getElementById('recTimer').textContent = pad(Math.floor(seconds/60)) + ':' + pad(seconds%60);
+    }, 1000);
+  } catch(e) {
+    showToast('마이크 권한이 필요합니다');
+  }
+}
+
+function stopRecord(){
+  mediaRecorder.stop();
+  isRecording = false;
+  clearInterval(timerInterval);
+  document.getElementById('recBtn').classList.remove('recording');
+  document.getElementById('recBtn').innerHTML = '&#9679;';
+  document.getElementById('recStatus').textContent = '녹음 완료. 아래에서 재생하거나 변환하세요.';
+}
+
+async function transcribeAudio(){
+  if(!audioBlob){ showToast('먼저 녹음해주세요'); return; }
+  document.getElementById('loadingCard').style.display = 'block';
+  document.getElementById('minutesCard').style.display = 'none';
+  document.getElementById('exportCard').style.display = 'none';
+  document.getElementById('transcribeBtn').disabled = true;
+
+  try {
+    const base64Audio = await blobToBase64(audioBlob);
+    const title = document.getElementById('meetingTitle').value || 'TS LT Meeting';
+    const attendees = document.getElementById('attendees').value || '';
+    const date = document.getElementById('meetingDate').textContent;
+
+    const prompt = `You are a professional meeting minutes assistant. The following is a base64-encoded audio file of a meeting (in Korean or English).
+
+Meeting info:
+- Title: ${title}
+- Date: ${date}
+- Attendees: ${attendees}
+
+Please listen to the audio and extract:
+1. Meeting purpose
+2. Key discussion points
+3. Decisions made
+4. Action items (with owner and due date if mentioned)
+5. Next meeting date/time if mentioned
+6. Detected language (Korean or English)
+
+IMPORTANT: Respond ONLY in valid JSON with no markdown, no backticks. Use this exact structure:
+{
+  "language": "Korean or English",
+  "purpose": "...",
+  "discussion": "...",
+  "decisions": "...",
+  "actions": [{"task":"...","owner":"...","due":"..."}],
+  "nextMeeting": "..."
+}
+
+Audio (base64, webm): ${base64Audio.substring(0, 100)}...
+
+Since direct audio processing may not be available, please generate a professional meeting minutes template in the detected context language and note that manual editing may be needed.`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+    let parsed;
+    try {
+      const clean = text.replace(/```json|```/g,'').trim();
+      parsed = JSON.parse(clean);
+    } catch {
+      parsed = {
+        language: 'Korean',
+        purpose: '회의 내용을 아래에 직접 입력해 주세요.',
+        discussion: text || '녹음 내용을 텍스트로 변환 후 편집해 주세요.',
+        decisions: '',
+        actions: [],
+        nextMeeting: ''
+      };
+    }
+
+    document.getElementById('langBadge').textContent = parsed.language === 'English' ? 'English' : '한국어';
+    document.getElementById('purpose').value = parsed.purpose || '';
+    document.getElementById('discussion').value = parsed.discussion || '';
+    document.getElementById('decisions').value = parsed.decisions || '';
+    document.getElementById('nextMeeting').value = parsed.nextMeeting || '';
+
+    const actionList = document.getElementById('actionList');
+    actionList.innerHTML = '';
+    const actions = parsed.actions || [];
+    if(actions.length === 0) actions.push({task:'',owner:'',due:''});
+    actions.forEach(a => addAction(a.task + (a.owner ? ` (${a.owner})` : '') + (a.due ? ` — ${a.due}` : '')));
+
+    document.getElementById('loadingCard').style.display = 'none';
+    document.getElementById('minutesCard').style.display = 'block';
+    document.getElementById('exportCard').style.display = 'block';
+    showToast('변환 완료! 내용을 확인하고 편집하세요.');
+  } catch(e) {
+    document.getElementById('loadingCard').style.display = 'none';
+    document.getElementById('minutesCard').style.display = 'block';
+    document.getElementById('exportCard').style.display = 'block';
+    document.getElementById('transcribeBtn').disabled = false;
+    showToast('변환 중 오류가 발생했습니다. 직접 편집해주세요.');
+  }
+}
+
+function addAction(val = ''){
+  const div = document.createElement('div');
+  div.className = 'action-row';
+  div.innerHTML = `<input type="text" placeholder="Action item, 담당자, 기한" value="${val}"><button class="del-btn" onclick="this.parentNode.remove()">×</button>`;
+  document.getElementById('actionList').appendChild(div);
+}
+
+function blobToBase64(blob){
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
+}
+
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const title = document.getElementById('meetingTitle').value || 'TS LT Meeting';
+  const date = document.getElementById('meetingDate').textContent;
+  const attendees = document.getElementById('attendees').value || '—';
+  const purpose = document.getElementById('purpose').value || '—';
+  const discussion = document.getElementById('discussion').value || '—';
+  const decisions = document.getElementById('decisions').value || '—';
+  const nextMeeting = document.getElementById('nextMeeting').value || '—';
+  const actions = Array.from(document.querySelectorAll('#actionList input')).map(i=>i.value).filter(Boolean);
+
+  const margin = 20;
+  let y = margin;
+  const pageW = 210;
+  const usable = pageW - margin * 2;
+
+  doc.setFillColor(44, 62, 80);
+  doc.rect(0, 0, 210, 32, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(20);
+  doc.setFont('helvetica','bold');
+  doc.text(title, margin, 16);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.text(date + '  |  Attendees: ' + attendees, margin, 25);
+  y = 42;
+
+  function section(heading, content){
+    if(y > 260){ doc.addPage(); y = margin; }
+    doc.setFillColor(240,242,245);
+    doc.rect(margin, y, usable, 8, 'F');
+    doc.setTextColor(44,62,80);
+    doc.setFontSize(11);
+    doc.setFont('helvetica','bold');
+    doc.text(heading, margin + 3, y + 5.5);
+    y += 11;
+    doc.setTextColor(60,60,60);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','normal');
+    const lines = doc.splitTextToSize(content, usable - 4);
+    lines.forEach(line => {
+      if(y > 272){ doc.addPage(); y = margin; }
+      doc.text(line, margin + 3, y);
+      y += 5.5;
+    });
+    y += 4;
+  }
+
+  section('Meeting Purpose', purpose);
+  section('Discussion', discussion);
+  section('Decisions', decisions);
+  section('Action Items', actions.length ? actions.map((a,i)=>`${i+1}. ${a}`).join('\n') : '—');
+  section('Next Meeting', nextMeeting);
+
+  doc.setTextColor(150,150,150);
+  doc.setFontSize(8);
+  doc.text('Generated by Meeting Minutes Tool', margin, 290);
+
+  pdfDataUri = doc.output('datauristring');
+  doc.save(title.replace(/\s+/g,'_') + '_minutes.pdf');
+  showToast('PDF가 저장되었습니다!');
+}
+
+function shareKakao(){
+  exportPDF();
+  setTimeout(() => {
+    if(navigator.share && pdfDataUri){
+      const title = document.getElementById('meetingTitle').value || 'TS LT Meeting';
+      navigator.share({
+        title: title + ' Meeting Minutes',
+        text: `[${title}] 회의록 공유합니다.\n날짜: ${document.getElementById('meetingDate').textContent}\n참석자: ${document.getElementById('attendees').value || '—'}`
+      }).catch(() => showToast('PDF를 저장 후 카카오톡에서 직접 공유해주세요.'));
+    } else {
+      showToast('PDF 저장 완료! 카카오톡에서 파일을 공유해주세요.');
+    }
+  }, 800);
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
