@@ -19,59 +19,87 @@ input[type=text],textarea{width:100%;padding:10px 12px;border:0.5px solid #ddd;b
 input:focus,textarea:focus{border-color:#555;background:#fff}
 textarea{resize:vertical;line-height:1.6}
 .date-val{padding:10px 12px;background:#f0f0f0;border-radius:10px;font-size:15px;color:#555}
+
+/* 녹음 */
 .rec-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:4px 0 8px}
 .rec-btn{width:78px;height:78px;border-radius:50%;border:none;background:#e74c3c;color:#fff;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .rec-btn.on{animation:pulse 1.4s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.4)}50%{box-shadow:0 0 0 16px rgba(231,76,60,0)}}
 .rec-label{font-size:13px;color:#888;text-align:center}
 .rec-timer{font-size:26px;font-weight:600;color:#e74c3c;font-variant-numeric:tabular-nums}
-.live-box{background:#fafafa;border:0.5px solid #ddd;border-radius:10px;padding:12px;min-height:80px;font-size:14px;line-height:1.7;color:#333;white-space:pre-wrap;word-break:break-word;margin-top:6px}
+.live-box{background:#fafafa;border:0.5px solid #ddd;border-radius:10px;padding:12px;min-height:60px;font-size:14px;line-height:1.7;color:#333;white-space:pre-wrap;word-break:break-word;margin-top:6px}
 .live-box.on{border-color:#e74c3c;background:#fff9f9}
 .interim{color:#bbb}
 audio{width:100%;border-radius:10px;margin-top:8px}
+
+/* 1차 노트 */
+.note-box{background:#f8f9ff;border:0.5px solid #c5cfe8;border-radius:12px;padding:14px;font-size:14px;line-height:1.8;color:#2c3e50;white-space:pre-wrap;word-break:break-word;min-height:80px}
+.note-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+
+/* 버튼 */
 .btn-main{width:100%;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:10px}
 .btn-main:disabled{background:#ccc;cursor:not-allowed}
-.btn-save{width:100%;padding:14px;background:#27ae60;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px}
+.btn-green{width:100%;padding:14px;background:#27ae60;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px}
+.btn-blue{width:100%;padding:14px;background:#2980b9;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px}
 .btn-ghost{width:100%;padding:10px;border:0.5px dashed #ccc;background:none;border-radius:10px;font-size:13px;color:#999;cursor:pointer;margin-top:6px}
-.btn-outline{padding:8px 14px;border:0.5px solid #ddd;background:#fff;border-radius:8px;font-size:13px;color:#555;cursor:pointer}
-.btn-outline:hover{background:#f5f5f5}
-.btn-danger{padding:8px 14px;border:0.5px solid #f5c6c6;background:#fff5f5;border-radius:8px;font-size:13px;color:#c0392b;cursor:pointer}
+.btn-sm{padding:8px 14px;border:0.5px solid #ddd;background:#fff;border-radius:8px;font-size:13px;color:#555;cursor:pointer}
+.btn-sm:hover{background:#f5f5f5}
+.btn-sm-danger{padding:8px 14px;border:0.5px solid #f5c6c6;background:#fff5f5;border-radius:8px;font-size:13px;color:#c0392b;cursor:pointer}
 .action-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .action-row input{flex:1}
 .del-btn{width:34px;height:34px;min-width:34px;border:0.5px solid #eee;background:#fff;border-radius:8px;font-size:18px;cursor:pointer;color:#e74c3c;display:flex;align-items:center;justify-content:center}
 .btn-pdf{width:100%;padding:14px;background:#2c3e50;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
 .btn-kakao{width:100%;padding:14px;background:#fee500;color:#3c1e1e;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
-.spinner{width:32px;height:32px;border:3px solid #eee;border-top-color:#1a1a1a;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+
+/* 스피너 */
+.spinner{width:28px;height:28px;border:3px solid #eee;border-top-color:#1a1a1a;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;padding:12px 0;color:#888;font-size:14px}
+
+/* 뱃지 */
 .badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;margin-left:6px}
 .badge-ko{background:#e8f4fd;color:#1a6fa8}
 .badge-en{background:#e8fdf0;color:#1a7a4a}
 .badge-cloud{background:#e8f4fd;color:#1a6fa8;font-size:11px;padding:2px 7px;border-radius:6px;margin-left:6px}
 .hint{font-size:12px;color:#aaa;margin-top:5px;text-align:center}
 .err-box{font-size:12px;color:#c0392b;margin-top:8px;padding:8px 12px;background:#fff5f5;border-radius:8px;border:0.5px solid #f5c6c6;display:none;word-break:break-all}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1}
-.sec{margin-bottom:14px}
+.fb-status{font-size:12px;padding:6px 10px;border-radius:8px;display:none}
+.fb-status.ok{background:#eafaf1;color:#27ae60;display:block}
+.fb-status.err{background:#fff5f5;color:#e74c3c;display:block}
+
+/* 저장 목록 */
 .minutes-item{border:0.5px solid #e0e0e0;border-radius:12px;padding:14px 16px;margin-bottom:10px;background:#fafafa}
 .minutes-title{font-size:15px;font-weight:500;color:#1a1a1a;margin-bottom:3px}
 .minutes-meta{font-size:12px;color:#888;margin-bottom:10px}
-.minutes-actions{display:flex;gap:8px;flex-wrap:wrap}
+.minutes-btns{display:flex;gap:8px;flex-wrap:wrap}
 .empty-state{text-align:center;padding:24px;color:#aaa;font-size:14px}
+.loading-list{text-align:center;padding:20px;color:#aaa;font-size:13px}
+
+/* 탭 */
 .tabs{display:flex;border-bottom:0.5px solid #e0e0e0;margin-bottom:16px}
 .tab-btn{flex:1;padding:10px;border:none;background:none;font-size:14px;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px}
 .tab-btn.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500}
-.fb-setup{background:#fff8e8;border-radius:10px;padding:12px 14px;font-size:13px;color:#333;line-height:1.9;margin-bottom:12px}
-.fb-setup a{color:#e67e22}
-.fb-status{font-size:12px;padding:6px 10px;border-radius:8px;margin-top:8px;display:none}
-.fb-status.ok{background:#eafaf1;color:#27ae60;display:block}
-.fb-status.err{background:#fff5f5;color:#e74c3c;display:block}
-.loading-list{text-align:center;padding:20px;color:#aaa;font-size:13px}
+
+/* 단계 표시 */
+.step-indicator{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.step{width:24px;height:24px;border-radius:50%;background:#e0e0e0;color:#888;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step.active{background:#1a1a1a;color:#fff}
+.step.done{background:#27ae60;color:#fff}
+.step-label{font-size:13px;color:#888}
+.step-label.active{color:#1a1a1a;font-weight:500}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.sec{margin-bottom:14px}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="card" id="fbSetupCard">
-    <div id="fbStatus" class="fb-status"></div>
+
+  <div class="card">
+    <h1>Meeting Minutes</h1>
+    <p class="sub">녹음 → AI 1차 정리 → 회의록 구조화 → Firebase 저장</p>
+    <div id="fbStatus" class="fb-status" style="margin-top:10px"></div>
   </div>
 
   <!-- 탭 -->
@@ -84,6 +112,8 @@ audio{width:100%;border-radius:10px;margin-top:8px}
 
   <!-- 새 회의록 탭 -->
   <div id="tabNew">
+
+    <!-- 기본 정보 -->
     <div class="card">
       <h2>기본 정보</h2>
       <label>회의 이름</label>
@@ -94,8 +124,12 @@ audio{width:100%;border-radius:10px;margin-top:8px}
       <input type="text" id="attendees" placeholder="예: 홍길동, Kim Jisu, Park Suho">
     </div>
 
+    <!-- STEP 1: 녹음 -->
     <div class="card">
-      <h2>녹음 &amp; 실시간 텍스트 변환</h2>
+      <div class="step-indicator">
+        <div class="step active" id="step1">1</div>
+        <div class="step-label active">녹음 &amp; 실시간 텍스트 변환</div>
+      </div>
       <div class="rec-wrap">
         <button class="rec-btn" id="recBtn" onclick="toggleRec()">&#9679;</button>
         <div class="rec-label" id="recLabel">버튼을 눌러 녹음 시작</div>
@@ -106,24 +140,43 @@ audio{width:100%;border-radius:10px;margin-top:8px}
       <div id="audioWrap" style="display:none"><audio id="audioEl" controls></audio></div>
       <div class="err-box" id="errBox"></div>
       <p class="hint" id="recHint">* 아이폰 Safari 지원 | 마이크 권한 허용 필요</p>
-      <button class="btn-main" id="aiBtn" disabled onclick="runAI('stt')">AI로 회의록 만들기</button>
     </div>
 
-    <div class="card">
-      <h2>또는 직접 입력</h2>
-      <textarea id="manualText" rows="5" placeholder="회의 내용, 결정 사항, action items 등 자유롭게 입력..."></textarea>
-      <button class="btn-main" onclick="runAI('manual')">AI로 회의록 만들기</button>
-    </div>
-
-    <div class="card" id="loadCard" style="display:none">
-      <div style="text-align:center;padding:12px">
-        <div class="spinner"></div>
-        <p style="color:#888;font-size:14px" id="loadMsg">AI가 회의 내용을 분석 중...</p>
+    <!-- STEP 2: AI 1차 정리 (미팅 노트) -->
+    <div class="card" id="noteCard" style="display:none">
+      <div class="step-indicator">
+        <div class="step done">1</div>
+        <div class="step active" id="step2">2</div>
+        <div class="step-label active">AI 1차 정리 — 미팅 노트</div>
+      </div>
+      <div id="noteLoading" class="loading-row" style="display:none">
+        <div class="spinner"></div> AI가 미팅 노트를 정리 중...
+      </div>
+      <div id="noteContent" style="display:none">
+        <div class="note-box" id="noteBox"></div>
+        <div class="note-actions">
+          <button class="btn-sm" onclick="shareNote()">카카오톡으로 바로 공유</button>
+          <button class="btn-sm" onclick="copyNote()">텍스트 복사</button>
+        </div>
+        <button class="btn-main" onclick="runFullAI()">회의록으로 구조화하기 →</button>
       </div>
     </div>
 
+    <!-- 직접 입력 -->
+    <div class="card">
+      <h2>또는 직접 입력</h2>
+      <textarea id="manualText" rows="4" placeholder="회의 내용을 자유롭게 입력..."></textarea>
+      <button class="btn-main" onclick="runManual()">AI로 회의록 만들기</button>
+    </div>
+
+    <!-- STEP 3: 회의록 편집 -->
     <div class="card" id="editCard" style="display:none">
-      <h2>회의록 편집 <span class="badge" id="langBadge"></span></h2>
+      <div class="step-indicator">
+        <div class="step done">1</div>
+        <div class="step done">2</div>
+        <div class="step active" id="step3">3</div>
+        <div class="step-label active">회의록 편집 <span class="badge" id="langBadge"></span></div>
+      </div>
       <div class="sec"><label>회의 목적</label><textarea id="purpose" rows="2"></textarea></div>
       <div class="sec"><label>주요 논의 내용</label><textarea id="discussion" rows="6"></textarea></div>
       <div class="sec"><label>결정 사항</label><textarea id="decisions" rows="3"></textarea></div>
@@ -135,12 +188,20 @@ audio{width:100%;border-radius:10px;margin-top:8px}
       <div class="sec"><label>다음 회의 일정</label><input type="text" id="nextMeeting" placeholder="예: 2025년 4월 5일 14:00"></div>
     </div>
 
+    <!-- STEP 4: 저장 & 내보내기 -->
     <div class="card" id="exportCard" style="display:none">
-      <h2>저장 &amp; 내보내기</h2>
-      <button class="btn-save" onclick="saveToFirebase()">☁️ 온라인 저장하기</button>
+      <div class="step-indicator">
+        <div class="step done">1</div>
+        <div class="step done">2</div>
+        <div class="step done">3</div>
+        <div class="step active">4</div>
+        <div class="step-label active">저장 &amp; 공유</div>
+      </div>
+      <button class="btn-green" onclick="saveToFirebase()">☁️ Firebase에 저장하기</button>
       <button class="btn-pdf" onclick="exportPDF()" style="margin-top:8px">PDF 다운로드</button>
-      <button class="btn-kakao" onclick="shareKakao()">카카오톡으로 공유하기</button>
+      <button class="btn-kakao" onclick="shareKakao()">카카오톡으로 PDF 공유</button>
     </div>
+
   </div>
 
   <!-- 저장된 회의록 탭 -->
@@ -155,23 +216,18 @@ audio{width:100%;border-radius:10px;margin-top:8px}
 <div class="toast" id="toast"></div>
 
 <script type="module">
-/* ═══════════════════════════════════════════════
-   ① Groq API 키 설정
-   console.groq.com → API Keys → Create API Key
-   ═══════════════════════════════════════════════ */
-const GROQ_API_KEY = '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';
+/* ═══════════════════════════════
+   설정값
+   ═══════════════════════════════ */
+const GROQ_API_KEY = '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';
 
-/* ═══════════════════════════════════════════════
-   ② Firebase 설정
-   Firebase Console → 프로젝트 설정 → 앱 추가 → firebaseConfig 복사
-   ═══════════════════════════════════════════════ */
 const firebaseConfig = {
-  apiKey: "AIzaSyCprFdE4--bPbMkWlfmhGWwwdMb9vW_am8",
-  authDomain: "meeting-minute-204a2.firebaseapp.com",
-  projectId: "meeting-minute-204a2",
-  storageBucket: "meeting-minute-204a2.firebasestorage.app",
+  apiKey:            "AIzaSyCprFdE4--bPbMkWlfmhGWwwdMb9vW_am8",
+  authDomain:        "meeting-minute-204a2.firebaseapp.com",
+  projectId:         "meeting-minute-204a2",
+  storageBucket:     "meeting-minute-204a2.firebasestorage.app",
   messagingSenderId: "644166640712",
-  appId: "1:644166640712:web:bb6cf34f0754deb62c647d"
+  appId:             "1:644166640712:web:bb6cf34f0754deb62c647d"
 };
 
 /* ── Firebase 초기화 ── */
@@ -181,19 +237,13 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, que
 
 let db = null;
 const fbStatus = document.getElementById('fbStatus');
-
 try {
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
-  if(firebaseConfig.apiKey === 'YOUR_FIREBASE_API_KEY'){
-    fbStatus.textContent = '⚠️ Firebase 설정값을 index.html에 입력해주세요.';
-    fbStatus.className = 'fb-status err';
-  } else {
-    fbStatus.textContent = '✓ Firebase 연결됨';
-    fbStatus.className = 'fb-status ok';
-  }
+  fbStatus.textContent = '✓ Firebase 연결됨';
+  fbStatus.className = 'fb-status ok';
 } catch(e) {
-  fbStatus.textContent = 'Firebase 초기화 오류: ' + e.message;
+  fbStatus.textContent = 'Firebase 오류: ' + e.message;
   fbStatus.className = 'fb-status err';
 }
 
@@ -201,7 +251,7 @@ try {
 document.getElementById('meetingDate').textContent =
   new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
 
-/* ── 탭 전환 ── */
+/* ── 탭 ── */
 window.switchTab = function(t){
   document.getElementById('tabNew').style.display = t==='new'?'block':'none';
   document.getElementById('tabSaved').style.display = t==='saved'?'block':'none';
@@ -211,143 +261,30 @@ window.switchTab = function(t){
   if(t==='saved') renderList();
 };
 
-/* ── Firebase 저장 ── */
-window.saveToFirebase = async function(){
-  if(!db){ showToast('Firebase 설정을 먼저 완료해주세요'); return; }
-  const data = getFormData();
-  if(!data.purpose && !data.discussion){ showToast('저장할 내용이 없습니다'); return; }
-  document.getElementById('loadMsg').textContent = '온라인 저장 중...';
-  document.getElementById('loadCard').style.display = 'block';
-  try {
-    await addDoc(collection(db, 'minutes'), {
-      ...data,
-      savedAt: new Date().toISOString(),
-      createdAt: Date.now()
-    });
-    document.getElementById('loadCard').style.display = 'none';
-    updateCount();
-    showToast('☁️ Firebase에 저장됐습니다!');
-  } catch(e) {
-    document.getElementById('loadCard').style.display = 'none';
-    showToast('저장 오류: ' + e.message);
-  }
-};
-
-/* ── 목록 불러오기 ── */
-async function renderList(){
-  const el = document.getElementById('minutesList');
-  if(!db){
-    el.innerHTML = '<div class="empty-state">Firebase 설정을 먼저 완료해주세요.</div>';
-    return;
-  }
-  el.innerHTML = '<div class="loading-list">불러오는 중...</div>';
-  try {
-    const q = query(collection(db,'minutes'), orderBy('createdAt','desc'));
-    const snap = await getDocs(q);
-    if(snap.empty){ el.innerHTML='<div class="empty-state">저장된 회의록이 없습니다.</div>'; return; }
-    const items = [];
-    snap.forEach(d => items.push({id:d.id, ...d.data()}));
-    document.getElementById('savedCount').textContent = `(${items.length})`;
-    el.innerHTML = items.map(m=>`
-      <div class="minutes-item" id="item-${m.id}">
-        <div class="minutes-title">${m.title||'(제목 없음)'}</div>
-        <div class="minutes-meta">${m.date||''} ${m.attendees?'· '+m.attendees:''}</div>
-        <div class="minutes-actions">
-          <button class="btn-outline" onclick="loadMinutes('${m.id}')">불러오기</button>
-          <button class="btn-outline" onclick="downloadPDF('${m.id}')">PDF</button>
-          <button class="btn-outline" onclick="shareItem('${m.id}')">카카오톡</button>
-          <button class="btn-danger" onclick="deleteMinutes('${m.id}')">삭제</button>
-        </div>
-      </div>`).join('');
-    window._minutesCache = items;
-  } catch(e) {
-    el.innerHTML = `<div class="empty-state">불러오기 오류: ${e.message}</div>`;
-  }
-}
-
-async function updateCount(){
-  if(!db) return;
-  try {
-    const snap = await getDocs(collection(db,'minutes'));
-    document.getElementById('savedCount').textContent = snap.size>0?`(${snap.size})`:'';
-  } catch(e){}
-}
-
-window.loadMinutes = function(id){
-  const m = (window._minutesCache||[]).find(x=>x.id===id);
-  if(!m) return;
-  document.getElementById('meetingTitle').value = m.title||'';
-  document.getElementById('attendees').value = m.attendees||'';
-  document.getElementById('purpose').value = m.purpose||'';
-  document.getElementById('discussion').value = m.discussion||'';
-  document.getElementById('decisions').value = m.decisions||'';
-  document.getElementById('nextMeeting').value = m.nextMeeting||'';
-  document.getElementById('actionList').innerHTML='';
-  (m.actions||[]).forEach(a=>addAction(a));
-  document.getElementById('editCard').style.display='block';
-  document.getElementById('exportCard').style.display='block';
-  switchTab('new');
-  showToast('회의록을 불러왔습니다.');
-};
-
-window.deleteMinutes = async function(id){
-  if(!confirm('이 회의록을 삭제할까요?')) return;
-  try {
-    await deleteDoc(doc(db,'minutes',id));
-    updateCount(); renderList();
-    showToast('삭제됐습니다.');
-  } catch(e){ showToast('삭제 오류: '+e.message); }
-};
-
-window.downloadPDF = function(id){
-  const m=(window._minutesCache||[]).find(x=>x.id===id);
-  if(m) makePDF(m);
-};
-
-window.shareItem = function(id){
-  const m=(window._minutesCache||[]).find(x=>x.id===id);
-  if(!m) return;
-  makePDF(m);
-  setTimeout(()=>{
-    if(navigator.share){
-      navigator.share({title:m.title+' Meeting Minutes',
-        text:`[${m.title}] 회의록\n날짜: ${m.date}\n참석자: ${m.attendees||'—'}`
-      }).catch(()=>showToast('PDF 저장 후 카카오톡에서 공유하세요'));
-    } else { showToast('PDF 다운로드 후 카카오톡에서 공유하세요'); }
-  },600);
-};
-
 /* ── 녹음 + STT ── */
 let mediaRecorder, audioChunks=[], recTimer, recSecs=0, recOn=false;
 let recognition=null, finalText='', interimText='';
 const pad=n=>String(n).padStart(2,'0');
 
 window.toggleRec = async function(){
-  try { recOn ? stopRec() : await startRec(); }
+  try{ recOn ? stopRec() : await startRec(); }
   catch(e){ showErr('녹음 오류: '+e.message); }
 };
 
 async function startRec(){
-  // 마이크 지원 여부 확인
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    showErr('이 브라우저는 마이크를 지원하지 않습니다. Safari 또는 Chrome을 사용해주세요.');
-    return;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    showErr('이 브라우저는 마이크를 지원하지 않습니다. Safari 또는 Chrome을 사용해주세요.'); return;
   }
   let stream;
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({audio:true, video:false});
-  } catch(e){
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false}); }
+  catch(e){
     if(e.name==='NotAllowedError') showErr('마이크 권한이 거부됐습니다. 브라우저 설정에서 마이크 권한을 허용해주세요.');
-    else if(e.name==='NotFoundError') showErr('마이크를 찾을 수 없습니다. 마이크가 연결되어 있는지 확인해주세요.');
     else showErr('마이크 오류: '+e.message);
     return;
   }
   audioChunks=[];
-  // 아이폰 Safari는 audio/mp4만 지원
-  const mime=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'].find(t=>{
-    try{ return MediaRecorder.isTypeSupported(t); } catch(e){ return false; }
-  })||'';
-  try{ mediaRecorder=new MediaRecorder(stream, mime?{mimeType:mime}:{}); }
+  const mime=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'].find(t=>{ try{return MediaRecorder.isTypeSupported(t);}catch(e){return false;} })||'';
+  try{ mediaRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:{}); }
   catch(e){ mediaRecorder=new MediaRecorder(stream); }
   mediaRecorder.ondataavailable=e=>{ if(e.data&&e.data.size>0) audioChunks.push(e.data); };
   mediaRecorder.onstop=()=>{
@@ -356,7 +293,6 @@ async function startRec(){
     document.getElementById('audioWrap').style.display='block';
     stream.getTracks().forEach(t=>t.stop());
   };
-  mediaRecorder.onerror=e=>{ showErr('녹음 중 오류: '+e.error?.message); };
   mediaRecorder.start(500);
   finalText=''; interimText='';
   startSTT();
@@ -374,16 +310,20 @@ function stopRec(){
   stopSTT(); recOn=false; clearInterval(recTimer);
   document.getElementById('recBtn').classList.remove('on');
   document.getElementById('recBtn').innerHTML='&#9679;';
-  document.getElementById('recLabel').textContent='녹음 완료';
+  document.getElementById('recLabel').textContent='녹음 완료 — AI가 미팅 노트를 정리 중...';
   document.getElementById('liveBox').classList.remove('on');
-  const has=finalText.trim().length>0;
-  document.getElementById('aiBtn').disabled=!has;
-  document.getElementById('recHint').textContent=has?'"AI로 회의록 만들기" 버튼을 누르세요!':'텍스트가 인식되지 않았습니다. 직접 입력을 이용해주세요.';
+  document.getElementById('recHint').textContent='';
+  // 녹음 완료 시 자동으로 1차 정리 시작
+  if(finalText.trim().length > 0) autoNote();
+  else {
+    document.getElementById('recLabel').textContent='녹음 완료';
+    document.getElementById('recHint').textContent='텍스트가 인식되지 않았습니다. 직접 입력을 이용해주세요.';
+  }
 }
 
 function startSTT(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){ showErr('음성인식 미지원 브라우저입니다.'); return; }
+  if(!SR){ showErr('음성인식 미지원 브라우저입니다. 직접 입력을 이용해주세요.'); return; }
   recognition=new SR();
   recognition.continuous=true; recognition.interimResults=true;
   recognition.lang=navigator.language?.startsWith('en')?'en-US':'ko-KR';
@@ -400,82 +340,164 @@ function startSTT(){
   recognition.onend=()=>{ if(recOn) recognition.start(); };
   recognition.start();
 }
+function stopSTT(){ if(recognition){try{recognition.stop();}catch(e){}} document.getElementById('sttState').textContent=''; }
 
-function stopSTT(){ if(recognition){ try{recognition.stop();}catch(e){} } document.getElementById('sttState').textContent=''; }
+/* ── STEP 2: AI 1차 정리 (미팅 노트) ── */
+async function autoNote(){
+  document.getElementById('noteCard').style.display='block';
+  document.getElementById('noteLoading').style.display='flex';
+  document.getElementById('noteContent').style.display='none';
 
-/* ── Groq AI ── */
-window.runAI = async function(src){
-  const text=src==='manual'?document.getElementById('manualText').value.trim():finalText.trim();
-  if(!text){ showToast('변환할 텍스트가 없습니다'); return; }
-  if(!GROQ_API_KEY||GROQ_API_KEY==='YOUR_GROQ_API_KEY'){ showErr('Groq API 키를 index.html에 입력해주세요.'); return; }
+  const title=document.getElementById('meetingTitle').value||'TS LT Meeting';
+  const date=document.getElementById('meetingDate').textContent;
+  const att=document.getElementById('attendees').value||'';
+
+  const prompt=`You are a meeting note taker. Clean up the raw speech transcript below into clear, readable meeting notes.
+
+Rules:
+- Remove filler words (um, uh, 어, 그, 저, 음, 아 etc.)
+- Fix grammar naturally
+- Keep it as meeting NOTES (not full minutes) — bullet points style
+- Group by topic if possible
+- Keep all important information
+- Write in the same language as the transcript
+- Format as plain text with bullet points (•)
+
+Meeting: ${title} | ${date} ${att?'| Attendees: '+att:''}
+
+Raw transcript:
+${finalText}
+
+Output clean meeting notes only. No JSON, no headers, just the notes.`;
+
+  try{
+    const resp = await groqCall(prompt, 800);
+    const note = resp.trim();
+    document.getElementById('noteBox').textContent = note;
+    document.getElementById('noteLoading').style.display='none';
+    document.getElementById('noteContent').style.display='block';
+    document.getElementById('recLabel').textContent='녹음 완료 ✓';
+    showToast('1차 미팅 노트 정리 완료!');
+  } catch(e){
+    document.getElementById('noteLoading').style.display='none';
+    document.getElementById('noteContent').style.display='block';
+    document.getElementById('noteBox').textContent = finalText;
+    showErr('1차 정리 오류: '+e.message);
+  }
+}
+
+/* ── 미팅 노트 공유/복사 ── */
+window.shareNote = async function(){
+  const note = document.getElementById('noteBox').textContent;
+  const title = document.getElementById('meetingTitle').value||'TS LT Meeting';
+  const date = document.getElementById('meetingDate').textContent;
+  const text = `[${title}] 미팅 노트\n${date}\n\n${note}`;
+  if(navigator.share){
+    try{ await navigator.share({title:title+' 미팅 노트', text}); }
+    catch(e){ if(e.name!=='AbortError') showToast('공유 오류: '+e.message); }
+  } else {
+    await navigator.clipboard.writeText(text).catch(()=>{});
+    showToast('클립보드에 복사됐습니다!');
+  }
+};
+
+window.copyNote = async function(){
+  const note = document.getElementById('noteBox').textContent;
+  try{
+    await navigator.clipboard.writeText(note);
+    showToast('복사됐습니다!');
+  } catch(e){ showToast('복사 실패. 직접 선택해서 복사해주세요.'); }
+};
+
+/* ── STEP 3: 회의록 구조화 ── */
+window.runFullAI = async function(){
+  const note = document.getElementById('noteBox').textContent || finalText;
+  await structureMinutes(note);
+};
+
+window.runManual = async function(){
+  const text = document.getElementById('manualText').value.trim();
+  if(!text){ showToast('내용을 입력해주세요'); return; }
+  await structureMinutes(text);
+};
+
+async function structureMinutes(text){
+  if(!GROQ_API_KEY||GROQ_API_KEY==='YOUR_GROQ_API_KEY'){ showErr('Groq API 키를 설정해주세요.'); return; }
+  document.getElementById('editCard').style.display='none';
+  document.getElementById('exportCard').style.display='none';
+
+  // 로딩 표시 (noteCard 안에)
+  const noteCard = document.getElementById('noteCard');
+  noteCard.style.display='block';
+  document.getElementById('noteLoading').style.display='flex';
+  document.getElementById('noteLoading').querySelector('span') && (document.getElementById('noteLoading').textContent='');
+  document.getElementById('noteLoading').innerHTML='<div class="spinner"></div> 회의록 구조화 중...';
+
   const title=document.getElementById('meetingTitle').value||'TS LT Meeting';
   const date=document.getElementById('meetingDate').textContent;
   const att=document.getElementById('attendees').value||'(not specified)';
-  document.getElementById('loadCard').style.display='block';
-  document.getElementById('loadMsg').textContent='AI가 회의 내용을 분석 중...';
-  document.getElementById('editCard').style.display='none';
-  document.getElementById('exportCard').style.display='none';
-  document.getElementById('errBox').style.display='none';
 
-  const prompt=`You are an expert meeting minutes writer. Transform the raw meeting transcript below into polished, professional meeting minutes.
+  const prompt=`You are an expert meeting minutes writer. Transform the meeting notes into structured, professional meeting minutes.
 
 Instructions:
-- Remove filler words (um, uh, 어, 그, 저, 음 etc.)
-- Fix grammar and sentence structure
-- Summarize repetitive points concisely
 - Use formal, professional business language
 - Group related topics together
 - Extract clear action items with owners and deadlines if mentioned
-- Write in the same language as the transcript (Korean or English)
-- Make it read like a professionally written document, NOT a raw transcript
+- Write in the same language as the notes (Korean or English)
+- Make it read like a professionally written document
 
 Meeting Info:
 - Title: ${title}
 - Date: ${date}
 - Attendees: ${att}
 
-Raw Transcript:
+Meeting Notes:
 ${text}
 
-Reply ONLY with valid JSON (no markdown, no explanation):
+Reply ONLY with valid JSON (no markdown):
 {
   "language": "Korean or English",
-  "purpose": "회의 목적을 1~2문장으로 명확하게",
-  "discussion": "주요 논의 내용을 주제별로 단락 구분하여 전문적으로 정리",
-  "decisions": "결정된 사항을 명확하게 작성",
-  "actions": [{"task":"구체적 action item","owner":"담당자 또는 빈칸","due":"기한 또는 빈칸"}],
+  "purpose": "회의 목적 1~2문장",
+  "discussion": "주요 논의 내용을 주제별 단락으로 전문적으로 정리",
+  "decisions": "결정 사항을 명확하게",
+  "actions": [{"task":"action item","owner":"담당자 또는 빈칸","due":"기한 또는 빈칸"}],
   "nextMeeting": "다음 회의 일정 또는 빈칸"
 }`;
 
   try{
-    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_API_KEY},
-      body:JSON.stringify({
-        model:'llama-3.3-70b-versatile',
-        messages:[
-          {role:'system',content:'You are a professional meeting minutes assistant. Always respond with valid JSON only.'},
-          {role:'user',content:prompt}
-        ],
-        temperature:0.3, max_tokens:1500
-      })
-    });
-    if(!resp.ok){ const e=await resp.json(); throw new Error(e?.error?.message||`HTTP ${resp.status}`); }
-    const data=await resp.json();
-    const raw=data.choices?.[0]?.message?.content||'';
+    const raw = await groqCall(prompt, 1500);
     let p;
     try{ p=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
     catch{ p={language:'Korean',purpose:'',discussion:raw,decisions:'',actions:[],nextMeeting:''}; }
     fillForm(p);
-    document.getElementById('loadCard').style.display='none';
+    document.getElementById('noteLoading').style.display='none';
     document.getElementById('editCard').style.display='block';
     document.getElementById('exportCard').style.display='block';
-    showToast('회의록 생성 완료! 확인 후 저장하세요.');
-  }catch(e){
-    document.getElementById('loadCard').style.display='none';
-    showErr('API 오류: '+e.message);
+    showToast('회의록 구조화 완료!');
+  } catch(e){
+    document.getElementById('noteLoading').style.display='none';
+    showErr('구조화 오류: '+e.message);
   }
-};
+}
+
+/* ── Groq 공통 호출 ── */
+async function groqCall(prompt, maxTokens=1000){
+  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_API_KEY},
+    body:JSON.stringify({
+      model:'llama-3.3-70b-versatile',
+      messages:[
+        {role:'system',content:'You are a professional meeting assistant.'},
+        {role:'user',content:prompt}
+      ],
+      temperature:0.3, max_tokens:maxTokens
+    })
+  });
+  if(!resp.ok){ const e=await resp.json(); throw new Error(e?.error?.message||`HTTP ${resp.status}`); }
+  const data=await resp.json();
+  return data.choices?.[0]?.message?.content||'';
+}
 
 function fillForm(p){
   const isEn=(p.language||'').toLowerCase().includes('en');
@@ -491,7 +513,7 @@ function fillForm(p){
   acts.forEach(a=>{ const v=[a.task,a.owner?`(${a.owner})`:'',a.due?`→ ${a.due}`:''].filter(Boolean).join(' '); addAction(v); });
 }
 
-window.addAction = function(val=''){
+window.addAction=function(val=''){
   const d=document.createElement('div'); d.className='action-row';
   d.innerHTML=`<input type="text" placeholder="내용 | 담당자 | 기한" value="${val.replace(/"/g,'&quot;')}"><button class="del-btn" onclick="this.parentNode.remove()">×</button>`;
   document.getElementById('actionList').appendChild(d);
@@ -499,21 +521,96 @@ window.addAction = function(val=''){
 
 function getFormData(){
   return {
-    title: document.getElementById('meetingTitle').value||'TS LT Meeting',
-    date: document.getElementById('meetingDate').textContent,
-    attendees: document.getElementById('attendees').value||'',
-    purpose: document.getElementById('purpose').value||'',
-    discussion: document.getElementById('discussion').value||'',
-    decisions: document.getElementById('decisions').value||'',
-    nextMeeting: document.getElementById('nextMeeting').value||'',
-    actions: Array.from(document.querySelectorAll('#actionList input')).map(i=>i.value).filter(Boolean)
+    title:document.getElementById('meetingTitle').value||'TS LT Meeting',
+    date:document.getElementById('meetingDate').textContent,
+    attendees:document.getElementById('attendees').value||'',
+    note:document.getElementById('noteBox').textContent||'',
+    purpose:document.getElementById('purpose').value||'',
+    discussion:document.getElementById('discussion').value||'',
+    decisions:document.getElementById('decisions').value||'',
+    nextMeeting:document.getElementById('nextMeeting').value||'',
+    actions:Array.from(document.querySelectorAll('#actionList input')).map(i=>i.value).filter(Boolean)
   };
 }
 
+/* ── Firebase 저장 ── */
+window.saveToFirebase=async function(){
+  if(!db){ showToast('Firebase 연결을 확인해주세요'); return; }
+  const data=getFormData();
+  document.getElementById('noteLoading').style.display='flex';
+  document.getElementById('noteLoading').innerHTML='<div class="spinner"></div> Firebase에 저장 중...';
+  document.getElementById('noteCard').style.display='block';
+  try{
+    await addDoc(collection(db,'minutes'),{...data, savedAt:new Date().toISOString(), createdAt:Date.now()});
+    document.getElementById('noteLoading').style.display='none';
+    updateCount();
+    showToast('☁️ Firebase에 저장됐습니다!');
+  }catch(e){
+    document.getElementById('noteLoading').style.display='none';
+    showToast('저장 오류: '+e.message);
+  }
+};
+
+/* ── Firebase 목록 ── */
+async function renderList(){
+  const el=document.getElementById('minutesList');
+  if(!db){ el.innerHTML='<div class="empty-state">Firebase 연결을 확인해주세요.</div>'; return; }
+  el.innerHTML='<div class="loading-list">불러오는 중...</div>';
+  try{
+    const q=query(collection(db,'minutes'),orderBy('createdAt','desc'));
+    const snap=await getDocs(q);
+    if(snap.empty){ el.innerHTML='<div class="empty-state">저장된 회의록이 없습니다.</div>'; return; }
+    const items=[];
+    snap.forEach(d=>items.push({id:d.id,...d.data()}));
+    document.getElementById('savedCount').textContent=`(${items.length})`;
+    el.innerHTML=items.map(m=>`
+      <div class="minutes-item" id="item-${m.id}">
+        <div class="minutes-title">${m.title||'(제목 없음)'}</div>
+        <div class="minutes-meta">${m.date||''} ${m.attendees?'· '+m.attendees:''}</div>
+        <div class="minutes-btns">
+          <button class="btn-sm" onclick="loadMinutes('${m.id}')">불러오기</button>
+          <button class="btn-sm" onclick="downloadPDF('${m.id}')">PDF</button>
+          <button class="btn-sm" onclick="shareItem('${m.id}')">카카오톡</button>
+          <button class="btn-sm-danger" onclick="deleteMinutes('${m.id}')">삭제</button>
+        </div>
+      </div>`).join('');
+    window._cache=items;
+  }catch(e){ el.innerHTML=`<div class="empty-state">오류: ${e.message}</div>`; }
+}
+
+async function updateCount(){
+  if(!db) return;
+  try{ const s=await getDocs(collection(db,'minutes')); document.getElementById('savedCount').textContent=s.size>0?`(${s.size})`:''; }catch(e){}
+}
+
+window.loadMinutes=function(id){
+  const m=(window._cache||[]).find(x=>x.id===id); if(!m) return;
+  document.getElementById('meetingTitle').value=m.title||'';
+  document.getElementById('attendees').value=m.attendees||'';
+  if(m.note){ document.getElementById('noteBox').textContent=m.note; document.getElementById('noteCard').style.display='block'; document.getElementById('noteContent').style.display='block'; document.getElementById('noteLoading').style.display='none'; }
+  document.getElementById('purpose').value=m.purpose||'';
+  document.getElementById('discussion').value=m.discussion||'';
+  document.getElementById('decisions').value=m.decisions||'';
+  document.getElementById('nextMeeting').value=m.nextMeeting||'';
+  document.getElementById('actionList').innerHTML='';
+  (m.actions||[]).forEach(a=>addAction(a));
+  document.getElementById('editCard').style.display='block';
+  document.getElementById('exportCard').style.display='block';
+  switchTab('new');
+  showToast('회의록을 불러왔습니다.');
+};
+
+window.deleteMinutes=async function(id){
+  if(!confirm('삭제할까요?')) return;
+  try{ await deleteDoc(doc(db,'minutes',id)); updateCount(); renderList(); showToast('삭제됐습니다.'); }
+  catch(e){ showToast('삭제 오류: '+e.message); }
+};
+
+window.downloadPDF=function(id){ const m=(window._cache||[]).find(x=>x.id===id); if(m) makePDF(m); };
+window.shareItem=async function(id){ const m=(window._cache||[]).find(x=>x.id===id); if(m) await doShare(m); };
+
 /* ── PDF ── */
-function makePDF(m){
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({unit:'mm',format:'a4'});
+function buildDoc(m, doc){
   const M=20,U=170; let y=M;
   doc.setFillColor(44,62,80); doc.rect(0,0,210,36,'F');
   doc.setTextColor(255,255,255); doc.setFontSize(18); doc.setFont('helvetica','bold');
@@ -530,6 +627,7 @@ function makePDF(m){
     doc.splitTextToSize(c||'—',U-4).forEach(l=>{ if(y>278){doc.addPage();y=M;} doc.text(l,M+3,y); y+=5.2; });
     y+=4;
   };
+  if(m.note) sec('Meeting Notes', m.note);
   sec('Meeting Purpose',m.purpose||'—');
   sec('Key Discussion',m.discussion||'—');
   sec('Decisions',m.decisions||'—');
@@ -537,19 +635,39 @@ function makePDF(m){
   sec('Next Meeting',m.nextMeeting||'—');
   doc.setTextColor(190,190,190); doc.setFontSize(8);
   doc.text('Generated by Meeting Minutes Tool',M,290);
-  doc.save((m.title||'minutes').replace(/\s+/g,'_')+'_minutes.pdf');
+}
+
+function makePDF(m){
+  const {jsPDF}=window.jspdf;
+  const d=new jsPDF({unit:'mm',format:'a4'});
+  buildDoc(m,d);
+  d.save((m.title||'minutes').replace(/\s+/g,'_')+'_minutes.pdf');
   showToast('PDF가 다운로드 폴더에 저장됐습니다!');
 }
 
-window.exportPDF = function(){ makePDF(getFormData()); };
-window.shareKakao = function(){
-  exportPDF();
-  setTimeout(()=>{
-    const m=getFormData();
-    if(navigator.share){ navigator.share({title:m.title+' Meeting Minutes',text:`[${m.title}] 회의록\n날짜: ${m.date}\n참석자: ${m.attendees||'—'}`}).catch(()=>{}); }
-    else{ showToast('PDF 저장 후 카카오톡에서 공유하세요'); }
-  },600);
-};
+function makePDFBlob(m){
+  const {jsPDF}=window.jspdf;
+  const d=new jsPDF({unit:'mm',format:'a4'});
+  buildDoc(m,d);
+  return d.output('blob');
+}
+
+window.exportPDF=function(){ makePDF(getFormData()); };
+
+async function doShare(m){
+  const blob=makePDFBlob(m);
+  const fn=(m.title||'minutes').replace(/\s+/g,'_')+'_minutes.pdf';
+  const file=new File([blob],fn,{type:'application/pdf'});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{ await navigator.share({title:m.title+' Meeting Minutes', text:`[${m.title}] 회의록\n날짜: ${m.date}\n참석자: ${m.attendees||'—'}`, files:[file]}); }
+    catch(e){ if(e.name!=='AbortError') showToast('공유 오류: '+e.message); }
+  } else {
+    makePDF(m);
+    showToast('PDF 저장 완료! 카카오톡에서 파일로 공유하세요.');
+  }
+}
+
+window.shareKakao=async function(){ await doShare(getFormData()); };
 
 function showErr(msg){ const el=document.getElementById('errBox'); el.textContent=msg; el.style.display='block'; }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
