@@ -76,20 +76,7 @@ audio{width:100%;border-radius:10px;margin-top:8px}
     <p class="sub">녹음 → AI 회의록 생성 → Firebase 온라인 저장</p>
   </div>
 
-  <!-- Firebase 설정 -->
-  <div class="card" id="fbSetupCard">
-    <h2>Firebase 설정</h2>
-    <div class="fb-setup">
-      <strong>Firebase 무료 설정 방법</strong><br>
-      1. <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> 접속<br>
-      2. <strong>프로젝트 만들기</strong> → 이름 입력 (예: meeting-minutes)<br>
-      3. <strong>Firestore Database</strong> → 만들기 → <strong>테스트 모드</strong> 선택<br>
-      4. 프로젝트 설정(⚙️) → <strong>앱 추가(&lt;/&gt;)</strong> → 앱 등록<br>
-      5. 아래 firebaseConfig 값을 index.html에 입력<br>
-      <span style="color:#999">* 무료 티어: 저장 1GB, 읽기 5만회/일</span>
-    </div>
-    <div id="fbStatus" class="fb-status"></div>
-  </div>
+  
 
   <!-- 탭 -->
   <div class="card" style="padding:0 20px">
