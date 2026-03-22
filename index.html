@@ -448,11 +448,10 @@ async function structureMinutes(text){
 
 Instructions:
 - Use formal, professional business language
-- Format ALL sections (purpose, discussion, decisions, nextMeeting) as bullet points using "•" character
-- Each bullet point should be on a new line starting with "•"
 - Group related topics together
 - Extract clear action items with owners and deadlines if mentioned
 - Write in the same language as the notes (Korean or English)
+- Make it read like a professionally written document
 
 Meeting Info:
 - Title: ${title}
@@ -465,11 +464,11 @@ ${text}
 Reply ONLY with valid JSON (no markdown):
 {
   "language": "Korean or English",
-  "purpose": "• 목적1\n• 목적2",
-  "discussion": "• 논의항목1\n• 논의항목2\n• 논의항목3",
-  "decisions": "• 결정사항1\n• 결정사항2",
+  "purpose": "회의 목적 1~2문장",
+  "discussion": "주요 논의 내용을 주제별 단락으로 전문적으로 정리",
+  "decisions": "결정 사항을 명확하게",
   "actions": [{"task":"action item","owner":"담당자 또는 빈칸","due":"기한 또는 빈칸"}],
-  "nextMeeting": "• 일정 정보"
+  "nextMeeting": "다음 회의 일정 또는 빈칸"
 }`;
 
   try{
@@ -628,52 +627,31 @@ async function buildDoc(m, lang='ko'){
     discussion:'주요 논의 내용', decisions:'결정 사항', actions:'Action Items', next:'다음 회의 일정'
   };
 
+  // 영문판은 AI로 번역
   let data = {...m};
-
-  // 영문 번역 — 필드별 개별 번역
-  if(isEn){
-    showToast('영문 번역 중...');
+  if(isEn && m.purpose){
     try{
-      const fieldsToTranslate = [
-        {key:'note',    val: m.note||''},
-        {key:'purpose', val: m.purpose||''},
-        {key:'discussion', val: m.discussion||''},
-        {key:'decisions',  val: m.decisions||''},
-        {key:'nextMeeting',val: m.nextMeeting||''},
-      ];
-      for(const f of fieldsToTranslate){
-        if(!f.val) continue;
-        const translated = await groqCall(
-          `Translate the following Korean text to professional English. Output ONLY the translated text, nothing else:\n\n${f.val}`,
-          800
-        );
-        data[f.key] = translated.trim();
-      }
-      // actions 번역
-      if(m.actions && m.actions.length){
-        const translatedActions = [];
-        for(const a of m.actions){
-          if(!a) continue;
-          const t = await groqCall(
-            `Translate this Korean action item to English. Output ONLY the translated text:\n\n${a}`,
-            200
-          );
-          translatedActions.push(t.trim());
-        }
-        data.actions = translatedActions;
-      }
-    } catch(e){
-      showToast('번역 오류 — 원문으로 생성합니다');
-    }
+      showToast('영문 번역 중...');
+      const translated = await groqCall(`Translate the following Korean meeting minutes fields to professional English. Reply ONLY with valid JSON:
+{
+  "purpose": "${(m.purpose||'').replace(/"/g,"'")}",
+  "discussion": "${(m.discussion||'').replace(/"/g,"'")}",
+  "decisions": "${(m.decisions||'').replace(/"/g,"'")}",
+  "note": "${(m.note||'').replace(/"/g,"'")}",
+  "nextMeeting": "${(m.nextMeeting||'').replace(/"/g,"'")}",
+  "actions": ${JSON.stringify(m.actions||[])}
+}`, 1500);
+      const parsed = JSON.parse(translated.replace(/```json|```/g,'').trim());
+      data = {...m, ...parsed};
+    } catch(e){ /* 번역 실패 시 원문 사용 */ }
   }
 
   const el = document.createElement('div');
   el.style.cssText = `
     width:794px; padding:40px;
-    font-family:${isEn ? "'Arial','Helvetica',sans-serif" : "'Apple SD Gothic Neo','Malgun Gothic','NanumGothic',sans-serif"};
+    font-family:${isEn?"'Arial','Helvetica',sans-serif":"'Apple SD Gothic Neo','Malgun Gothic','NanumGothic',sans-serif"};
     background:#fff; color:#222; position:fixed; left:-9999px; top:0;
   `;
-
   const actions = (data.actions||[]).length
     ? (data.actions).map((a,i)=>`<div style="margin:4px 0">${i+1}. ${a}</div>`).join('')
     : '—';
@@ -685,7 +663,7 @@ async function buildDoc(m, lang='ko'){
       <div style="font-size:13px;opacity:.85">${labels.attendees}: ${data.attendees||'—'}</div>
     </div>
     ${data.note ? sec(labels.note, data.note.replace(/\n/g,'<br>')) : ''}
-    ${sec(labels.purpose,   (data.purpose||'—').replace(/\n/g,'<br>'))}
+    ${sec(labels.purpose,  (data.purpose||'—').replace(/\n/g,'<br>'))}
     ${sec(labels.discussion,(data.discussion||'—').replace(/\n/g,'<br>'))}
     ${sec(labels.decisions, (data.decisions||'—').replace(/\n/g,'<br>'))}
     ${sec(labels.actions, actions)}
@@ -723,19 +701,17 @@ async function buildDoc(m, lang='ko'){
 }
 
 function getDateStr(m){
-  // m.date에서 숫자만 추출 (예: 2025년 3월 23일 → 20250323)
-  const d = m.date ? new Date(m.date.replace(/[^0-9]/g,' ').trim().replace(/\s+/g,'-')) : new Date();
-  const y = d.getFullYear();
-  const mo = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
-  return `${y}${mo}${day}`;
+  // m.date 에서 숫자만 추출 (예: 2025년 3월 23일 → 20250323)
+  const raw = m.date||'';
+  const nums = raw.match(/\d+/g);
+  if(nums && nums.length>=3) return nums[0]+nums[1].padStart(2,'0')+nums[2].padStart(2,'0');
+  return new Date().toISOString().slice(0,10).replace(/-/g,'');
 }
 
 function makeFileName(m, lang){
   const suffix = lang==='en'?'_EN':'_KO';
-  const title = (m.title||'minutes').replace(/\s+/g,'_').replace(/[^\w가-힣_-]/g,'');
   const date = getDateStr(m);
-  return `${title}_${date}${suffix}_minutes.pdf`;
+  return (m.title||'minutes').replace(/\s+/g,'_')+'_'+date+suffix+'.pdf';
 }
 
 async function makePDF(m, lang='ko'){
@@ -753,8 +729,8 @@ window.exportPDF=async function(lang='ko'){ await makePDF(getFormData(), lang); 
 
 async function doShare(m, lang='ko'){
   const blob = await makePDFBlob(m, lang);
-  const fn = makeFileName(m, lang);
-  const file = new File([blob], fn, {type:'application/pdf'});
+  const suffix = lang==='en'?'_EN':'_KO';
+  const file = new File([blob], makeFileName(m, lang), {type:'application/pdf'});
   if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
     try{ await navigator.share({
       title: m.title+(lang==='en'?' Meeting Minutes':' 회의록'),
