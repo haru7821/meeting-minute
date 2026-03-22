@@ -2,18 +2,20 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <title>Meeting Minutes</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#f5f5f7;min-height:100vh}
 .app{max-width:680px;margin:0 auto;padding:16px 16px 48px}
 .card{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;border:0.5px solid #e0e0e0}
 h1{font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:3px}
-.sub{font-size:13px;color:#888}
 h2{font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.sub{font-size:13px;color:#888}
 label{font-size:13px;color:#666;display:block;margin-bottom:4px;margin-top:12px}
 label:first-of-type{margin-top:0}
 input[type=text],textarea{width:100%;padding:10px 12px;border:0.5px solid #ddd;border-radius:10px;font-size:15px;font-family:inherit;color:#1a1a1a;background:#fafafa;outline:none}
@@ -28,34 +30,33 @@ textarea{resize:vertical;line-height:1.6}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.4)}50%{box-shadow:0 0 0 16px rgba(231,76,60,0)}}
 .rec-label{font-size:13px;color:#888;text-align:center}
 .rec-timer{font-size:26px;font-weight:600;color:#e74c3c;font-variant-numeric:tabular-nums}
-.live-box{background:#fafafa;border:0.5px solid #ddd;border-radius:10px;padding:12px;min-height:60px;font-size:14px;line-height:1.7;color:#333;white-space:pre-wrap;word-break:break-word;margin-top:6px}
+.live-box{background:#fafafa;border:0.5px solid #ddd;border-radius:10px;padding:12px;min-height:70px;font-size:14px;line-height:1.7;color:#333;white-space:pre-wrap;word-break:break-word;margin-top:6px}
 .live-box.on{border-color:#e74c3c;background:#fff9f9}
 .interim{color:#bbb}
 audio{width:100%;border-radius:10px;margin-top:8px}
 
-/* 1차 노트 */
-.note-box{background:#f8f9ff;border:0.5px solid #c5cfe8;border-radius:12px;padding:14px;font-size:14px;line-height:1.8;color:#2c3e50;white-space:pre-wrap;word-break:break-word;min-height:80px}
-.note-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+/* 노트 박스 */
+.note-box{background:#f8f9ff;border:0.5px solid #c5cfe8;border-radius:12px;padding:14px;font-size:14px;line-height:1.8;color:#2c3e50;white-space:pre-wrap;word-break:break-word;min-height:60px}
 
 /* 버튼 */
-.btn-main{width:100%;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:10px}
-.btn-main:disabled{background:#ccc;cursor:not-allowed}
+.btn-black{width:100%;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:10px}
+.btn-black:disabled{background:#ccc;cursor:not-allowed}
 .btn-green{width:100%;padding:14px;background:#27ae60;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px}
 .btn-blue{width:100%;padding:14px;background:#2980b9;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px}
+.btn-dark{width:100%;padding:14px;background:#2c3e50;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
 .btn-ghost{width:100%;padding:10px;border:0.5px dashed #ccc;background:none;border-radius:10px;font-size:13px;color:#999;cursor:pointer;margin-top:6px}
 .btn-sm{padding:8px 14px;border:0.5px solid #ddd;background:#fff;border-radius:8px;font-size:13px;color:#555;cursor:pointer}
 .btn-sm:hover{background:#f5f5f5}
 .btn-sm-danger{padding:8px 14px;border:0.5px solid #f5c6c6;background:#fff5f5;border-radius:8px;font-size:13px;color:#c0392b;cursor:pointer}
+.note-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 .action-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .action-row input{flex:1}
 .del-btn{width:34px;height:34px;min-width:34px;border:0.5px solid #eee;background:#fff;border-radius:8px;font-size:18px;cursor:pointer;color:#e74c3c;display:flex;align-items:center;justify-content:center}
-.btn-pdf{width:100%;padding:14px;background:#2c3e50;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
-.btn-kakao{width:100%;padding:14px;background:#fee500;color:#3c1e1e;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
 
-/* 스피너 */
-.spinner{width:28px;height:28px;border:3px solid #eee;border-top-color:#1a1a1a;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+/* 로딩 */
+.spinner{width:26px;height:26px;border:3px solid #eee;border-top-color:#1a1a1a;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-row{display:flex;align-items:center;padding:12px 0;color:#888;font-size:14px}
+.loading-row{display:flex;align-items:center;padding:10px 0;color:#888;font-size:14px}
 
 /* 뱃지 */
 .badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;margin-left:6px}
@@ -64,34 +65,37 @@ audio{width:100%;border-radius:10px;margin-top:8px}
 .badge-cloud{background:#e8f4fd;color:#1a6fa8;font-size:11px;padding:2px 7px;border-radius:6px;margin-left:6px}
 .hint{font-size:12px;color:#aaa;margin-top:5px;text-align:center}
 .err-box{font-size:12px;color:#c0392b;margin-top:8px;padding:8px 12px;background:#fff5f5;border-radius:8px;border:0.5px solid #f5c6c6;display:none;word-break:break-all}
-.fb-status{font-size:12px;padding:6px 10px;border-radius:8px;display:none}
+.fb-status{font-size:12px;padding:6px 10px;border-radius:8px;margin-top:8px;display:none}
 .fb-status.ok{background:#eafaf1;color:#27ae60;display:block}
 .fb-status.err{background:#fff5f5;color:#e74c3c;display:block}
 
-/* 저장 목록 */
-.minutes-item{border:0.5px solid #e0e0e0;border-radius:12px;padding:14px 16px;margin-bottom:10px;background:#fafafa}
-.minutes-title{font-size:15px;font-weight:500;color:#1a1a1a;margin-bottom:3px}
-.minutes-meta{font-size:12px;color:#888;margin-bottom:10px}
-.minutes-btns{display:flex;gap:8px;flex-wrap:wrap}
-.empty-state{text-align:center;padding:24px;color:#aaa;font-size:14px}
-.loading-list{text-align:center;padding:20px;color:#aaa;font-size:13px}
-
-/* 탭 */
-.tabs{display:flex;border-bottom:0.5px solid #e0e0e0;margin-bottom:16px}
-.tab-btn{flex:1;padding:10px;border:none;background:none;font-size:14px;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px}
-.tab-btn.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500}
-
-/* 단계 표시 */
-.step-indicator{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+/* 단계 */
+.step-wrap{display:flex;align-items:center;gap:8px;margin-bottom:14px}
 .step{width:24px;height:24px;border-radius:50%;background:#e0e0e0;color:#888;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .step.active{background:#1a1a1a;color:#fff}
 .step.done{background:#27ae60;color:#fff}
-.step-label{font-size:13px;color:#888}
-.step-label.active{color:#1a1a1a;font-weight:500}
+.step-lbl{font-size:13px;color:#888}
+.step-lbl.active{color:#1a1a1a;font-weight:500}
 
+/* 탭 */
+.tabs{display:flex;border-bottom:0.5px solid #e0e0e0;margin-bottom:16px}
+.tab-btn{flex:1;padding:10px;border:none;background:none;font-size:13px;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px}
+.tab-btn.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500}
+
+/* 저장 목록 */
+.m-item{border:0.5px solid #e0e0e0;border-radius:12px;padding:14px 16px;margin-bottom:10px;background:#fafafa}
+.m-title{font-size:15px;font-weight:500;color:#1a1a1a;margin-bottom:3px}
+.m-meta{font-size:12px;color:#888;margin-bottom:10px}
+.m-btns{display:flex;gap:8px;flex-wrap:wrap}
+.empty-state{text-align:center;padding:24px;color:#aaa;font-size:14px}
+.loading-list{text-align:center;padding:20px;color:#aaa;font-size:13px}
+
+/* 컨텍스트 */
+code{background:#f0f0f0;padding:2px 6px;border-radius:4px;font-size:12px}
+
+.sec{margin-bottom:14px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
-.sec{margin-bottom:14px}
 </style>
 </head>
 <body>
@@ -99,11 +103,10 @@ audio{width:100%;border-radius:10px;margin-top:8px}
 
   <div class="card">
     <h1>Meeting Minutes</h1>
-    <p class="sub">녹음 → AI 1차 정리 → 회의록 구조화 → Firebase 저장</p>
-    <div id="fbStatus" class="fb-status" style="margin-top:10px"></div>
+    <p class="sub">녹음 → AI 1차 정리 → 회의록 구조화 → 저장</p>
+    <div id="fbStatus" class="fb-status"></div>
   </div>
 
-  <!-- 탭 -->
   <div class="card" style="padding:0 20px">
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('new')">새 회의록</button>
@@ -112,10 +115,9 @@ audio{width:100%;border-radius:10px;margin-top:8px}
     </div>
   </div>
 
-  <!-- 새 회의록 탭 -->
+  <!-- ── 새 회의록 ── -->
   <div id="tabNew">
 
-    <!-- 기본 정보 -->
     <div class="card">
       <h2>기본 정보</h2>
       <label>회의 이름</label>
@@ -126,11 +128,11 @@ audio{width:100%;border-radius:10px;margin-top:8px}
       <input type="text" id="attendees" placeholder="예: 홍길동, Kim Jisu, Park Suho">
     </div>
 
-    <!-- STEP 1: 녹음 -->
+    <!-- STEP 1 녹음 -->
     <div class="card">
-      <div class="step-indicator">
-        <div class="step active" id="step1">1</div>
-        <div class="step-label active">녹음 &amp; 실시간 텍스트 변환</div>
+      <div class="step-wrap">
+        <div class="step active" id="s1">1</div>
+        <div class="step-lbl active">녹음 &amp; 실시간 텍스트 변환</div>
       </div>
       <div class="rec-wrap">
         <button class="rec-btn" id="recBtn" onclick="toggleRec()">&#9679;</button>
@@ -144,23 +146,22 @@ audio{width:100%;border-radius:10px;margin-top:8px}
       <p class="hint" id="recHint">* 아이폰 Safari 지원 | 마이크 권한 허용 필요</p>
     </div>
 
-    <!-- STEP 2: AI 1차 정리 (미팅 노트) -->
+    <!-- STEP 2 미팅 노트 -->
     <div class="card" id="noteCard" style="display:none">
-      <div class="step-indicator">
+      <div class="step-wrap">
         <div class="step done">1</div>
-        <div class="step active" id="step2">2</div>
-        <div class="step-label active">AI 1차 정리 — 미팅 노트</div>
+        <div class="step active">2</div>
+        <div class="step-lbl active">AI 1차 정리 — 미팅 노트</div>
       </div>
       <div id="noteLoading" class="loading-row" style="display:none">
-        <div class="spinner"></div> AI가 미팅 노트를 정리 중...
+        <div class="spinner"></div><span id="noteLoadMsg">AI가 미팅 노트를 정리 중...</span>
       </div>
       <div id="noteContent" style="display:none">
         <div class="note-box" id="noteBox"></div>
         <div class="note-actions">
-          <button class="btn-sm" onclick="shareNote()">카카오톡으로 바로 공유</button>
           <button class="btn-sm" onclick="copyNote()">텍스트 복사</button>
         </div>
-        <button class="btn-main" onclick="runFullAI()">회의록으로 구조화하기 →</button>
+        <button class="btn-black" onclick="runStructure()">회의록으로 구조화하기 →</button>
       </div>
     </div>
 
@@ -168,16 +169,15 @@ audio{width:100%;border-radius:10px;margin-top:8px}
     <div class="card">
       <h2>또는 직접 입력</h2>
       <textarea id="manualText" rows="4" placeholder="회의 내용을 자유롭게 입력..."></textarea>
-      <button class="btn-main" onclick="runManual()">AI로 회의록 만들기</button>
+      <button class="btn-black" onclick="runManual()">AI로 회의록 만들기</button>
     </div>
 
-    <!-- STEP 3: 회의록 편집 -->
+    <!-- STEP 3 편집 -->
     <div class="card" id="editCard" style="display:none">
-      <div class="step-indicator">
-        <div class="step done">1</div>
-        <div class="step done">2</div>
-        <div class="step active" id="step3">3</div>
-        <div class="step-label active">회의록 편집 <span class="badge" id="langBadge"></span></div>
+      <div class="step-wrap">
+        <div class="step done">1</div><div class="step done">2</div>
+        <div class="step active">3</div>
+        <div class="step-lbl active">회의록 편집 <span class="badge" id="langBadge"></span></div>
       </div>
       <div class="sec"><label>회의 목적</label><textarea id="purpose" rows="2"></textarea></div>
       <div class="sec"><label>주요 논의 내용</label><textarea id="discussion" rows="6"></textarea></div>
@@ -188,31 +188,30 @@ audio{width:100%;border-radius:10px;margin-top:8px}
         <button class="btn-ghost" onclick="addAction()">+ Action Item 추가</button>
       </div>
       <div class="sec"><label>다음 회의 일정</label><input type="text" id="nextMeeting" placeholder="예: 2025년 4월 5일 14:00"></div>
-      <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid #eee;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn-sm" id="translateBtn" onclick="translateTo('en')" style="background:#f0f7ff;border-color:#b3d4f5;color:#1a5fa8;font-weight:500">🌐 영문으로 변환</button>
-        <button class="btn-sm" id="translateKoBtn" onclick="translateTo('ko')" style="background:#f0fff4;border-color:#b3e6c8;color:#1a7a4a;font-weight:500">🇰🇷 한글로 변환</button>
+      <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid #eee;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn-sm" id="btnToEn" onclick="translateTo('en')" style="background:#f0f7ff;border-color:#b3d4f5;color:#1a5fa8;font-weight:500">🌐 영문으로 변환</button>
+        <button class="btn-sm" id="btnToKo" onclick="translateTo('ko')" style="background:#f0fff4;border-color:#b3e6c8;color:#1a7a4a;font-weight:500">🇰🇷 한글로 변환</button>
       </div>
-      <div id="translateLoading" style="display:none" class="loading-row"><div class="spinner"></div> <span id="translateLoadingMsg">번역 중...</span></div>
+      <div id="translateLoading" class="loading-row" style="display:none">
+        <div class="spinner"></div><span id="translateMsg">번역 중...</span>
+      </div>
     </div>
 
-    <!-- STEP 4: 저장 & 내보내기 -->
+    <!-- STEP 4 저장/내보내기 -->
     <div class="card" id="exportCard" style="display:none">
-      <div class="step-indicator">
-        <div class="step done">1</div>
-        <div class="step done">2</div>
-        <div class="step done">3</div>
-        <div class="step active">4</div>
-        <div class="step-label active">저장 &amp; 공유</div>
+      <div class="step-wrap">
+        <div class="step done">1</div><div class="step done">2</div>
+        <div class="step done">3</div><div class="step active">4</div>
+        <div class="step-lbl active">저장 &amp; 내보내기</div>
       </div>
       <button class="btn-green" onclick="saveToFirebase()">☁️ Firebase에 저장하기</button>
-      <button class="btn-pdf" onclick="exportPDF()" style="margin-top:8px">PDF 다운로드</button>
-      <button class="btn-blue" onclick="exportHTML()" style="margin-top:8px">HTML 파일로 저장</button>
-
+      <button class="btn-dark" onclick="exportPDF()" style="margin-top:8px">🖨️ PDF 미리보기 / 저장</button>
+      <button class="btn-blue" onclick="exportHTML()">💾 HTML 파일로 저장</button>
     </div>
 
   </div>
 
-  <!-- 저장된 회의록 탭 -->
+  <!-- ── 저장된 회의록 ── -->
   <div id="tabSaved" style="display:none">
     <div class="card">
       <h2>저장된 회의록 <span class="badge-cloud">☁️ Firebase</span></h2>
@@ -220,65 +219,41 @@ audio{width:100%;border-radius:10px;margin-top:8px}
     </div>
   </div>
 
-  <!-- 용어 학습 탭 -->
+  <!-- ── 용어 학습 ── -->
   <div id="tabContext" style="display:none">
-
     <div class="card">
       <h2>회사 용어 &amp; 번역 가이드</h2>
-      <p class="sub" style="margin-bottom:12px">자주 사용하는 용어, 사람 이름, 제품명 등을 등록하면 AI가 번역 시 참조해요.</p>
+      <p class="sub" style="margin-bottom:12px">자주 사용하는 용어, 이름, 제품명을 등록하면 AI 번역 시 참조해요.</p>
       <label>한글 → 영문 용어 매핑</label>
-      <p class="sub" style="margin-bottom:8px">한 줄에 하나씩: <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px">한글용어 = English Term</code></p>
-      <textarea id="termMap" rows="8" placeholder="예:
-TS LT = TS Leadership Team
-분기 목표 = Quarterly Target
-매출 = Revenue
-김지수 = Kim Jisu
-워크오더 = Work Order (WO)
-납품 = Delivery"></textarea>
+      <p class="sub" style="margin-bottom:6px">한 줄에 하나씩: <code>한글용어 = English Term</code></p>
+      <textarea id="termMap" rows="7" placeholder="예:&#10;TS LT = TS Leadership Team&#10;분기 목표 = Quarterly Target&#10;워크오더 = Work Order (WO)"></textarea>
       <label style="margin-top:14px">번역 스타일 가이드</label>
-      <p class="sub" style="margin-bottom:8px">번역 시 참고할 문체, 톤, 규칙 등을 자유롭게 입력하세요.</p>
-      <textarea id="styleGuide" rows="5" placeholder="예:
-- 공식적이고 전문적인 비즈니스 영어 사용
-- 수동태보다 능동태 선호
-- Action Items는 동사원형으로 시작
-- 직급은 번역하지 않고 한글 그대로 유지 (예: 팀장 → 팀장)
-- 숫자와 날짜는 영미식으로 변환"></textarea>
-      <label style="margin-top:14px">참고용 기존 회의록 샘플</label>
-      <p class="sub" style="margin-bottom:8px">잘 번역된 과거 회의록을 붙여넣으면 AI가 문체를 학습해요.</p>
-      <textarea id="sampleMinutes" rows="8" placeholder="예:
-[한글]
-Q1 영업 목표 달성률은 87%이며, 주요 원인은 신규 거래처 확보 지연입니다.
-
-[English]
-The Q1 sales target achievement rate was 87%, primarily due to delays in securing new business accounts."></textarea>
+      <textarea id="styleGuide" rows="4" placeholder="예:&#10;- 공식적인 비즈니스 영어 사용&#10;- Action Items는 동사원형으로 시작"></textarea>
+      <label style="margin-top:14px">참고 번역 샘플</label>
+      <textarea id="sampleMinutes" rows="6" placeholder="잘 번역된 과거 회의록을 붙여넣으면 AI가 문체를 학습해요."></textarea>
       <button class="btn-green" onclick="saveContext()" style="margin-top:12px">저장하기</button>
-      <button class="btn-sm" onclick="clearContext()" style="margin-top:8px;width:100%">초기화</button>
-      <div id="contextSaved" style="display:none;font-size:12px;color:#27ae60;margin-top:8px;text-align:center">✓ 저장됐습니다. 다음 번역부터 적용돼요.</div>
+      <div id="ctxSaved" style="display:none;font-size:12px;color:#27ae60;margin-top:8px;text-align:center">✓ 저장됐습니다!</div>
     </div>
-
     <div class="card">
       <h2>번역 테스트</h2>
-      <p class="sub" style="margin-bottom:10px">등록한 용어와 가이드가 잘 적용되는지 테스트해보세요.</p>
-      <textarea id="testInput" rows="4" placeholder="테스트할 한글 텍스트 입력..."></textarea>
-      <button class="btn-main" onclick="testTranslate()" style="margin-top:8px">번역 테스트</button>
+      <textarea id="testInput" rows="4" placeholder="테스트할 텍스트 입력..."></textarea>
+      <button class="btn-black" onclick="testTranslate()" style="margin-top:8px" id="testBtn">번역 테스트 (→ 영문)</button>
       <div id="testOutput" style="display:none;margin-top:12px">
         <label>번역 결과</label>
         <div class="note-box" id="testResult"></div>
       </div>
     </div>
-
   </div>
 
 </div>
 <div class="toast" id="toast"></div>
 
-<script type="module">
-/* ═══════════════════════════════
+<script>
+/* ════════════════════════════════
    설정값
-   ═══════════════════════════════ */
+   ════════════════════════════════ */
 const GROQ_API_KEY = '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';
-
-const firebaseConfig = {
+const FB_CONFIG = {
   apiKey:            "AIzaSyCprFdE4--bPbMkWlfmhGWwwdMb9vW_am8",
   authDomain:        "meeting-minute-204a2.firebaseapp.com",
   projectId:         "meeting-minute-204a2",
@@ -287,68 +262,65 @@ const firebaseConfig = {
   appId:             "1:644166640712:web:bb6cf34f0754deb62c647d"
 };
 
-/* ── 날짜 ── */
+/* ════════════════════════════════
+   날짜
+   ════════════════════════════════ */
 document.getElementById('meetingDate').textContent =
   new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
 
-/* ── Firebase 초기화 ── */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+/* ════════════════════════════════
+   Firebase (compat 방식)
+   ════════════════════════════════ */
 let db = null;
-const fbStatus = document.getElementById('fbStatus');
-try {
-  const app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  fbStatus.textContent = '✓ Firebase 연결됨';
-  fbStatus.className = 'fb-status ok';
-} catch(e) {
-  fbStatus.textContent = 'Firebase 오류: ' + e.message;
-  fbStatus.className = 'fb-status err';
+try{
+  firebase.initializeApp(FB_CONFIG);
+  db = firebase.firestore();
+  document.getElementById('fbStatus').textContent='✓ Firebase 연결됨';
+  document.getElementById('fbStatus').className='fb-status ok';
+  updateCount();
+}catch(e){
+  document.getElementById('fbStatus').textContent='Firebase 오류: '+e.message;
+  document.getElementById('fbStatus').className='fb-status err';
 }
 
-/* ── 날짜 ── */
-document.getElementById('meetingDate').textContent =
-  new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
-
-/* ── 탭 ── */
-window.switchTab = function(t){
-  document.getElementById('tabNew').style.display      = t==='new'    ?'block':'none';
-  document.getElementById('tabSaved').style.display    = t==='saved'  ?'block':'none';
-  document.getElementById('tabContext').style.display  = t==='context'?'block':'none';
+/* ════════════════════════════════
+   탭
+   ════════════════════════════════ */
+function switchTab(t){
+  ['new','saved','context'].forEach(k=>{
+    document.getElementById('tab'+k.charAt(0).toUpperCase()+k.slice(1)).style.display = k===t?'block':'none';
+  });
   document.querySelectorAll('.tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',
-      (i===0&&t==='new')||(i===1&&t==='saved')||(i===2&&t==='context'));
+    b.classList.toggle('active',['new','saved','context'][i]===t);
   });
   if(t==='saved') renderList();
   if(t==='context') loadContextUI();
-};
+}
 
-/* ── 녹음 + STT ── */
+/* ════════════════════════════════
+   녹음 + STT
+   ════════════════════════════════ */
 let mediaRecorder, audioChunks=[], recTimer, recSecs=0, recOn=false;
 let recognition=null, finalText='', interimText='';
 const pad=n=>String(n).padStart(2,'0');
 
-window.toggleRec = async function(){
-  try{ recOn ? stopRec() : await startRec(); }
-  catch(e){ showErr('녹음 오류: '+e.message); }
-};
+function toggleRec(){ recOn ? stopRec() : startRec(); }
 
 async function startRec(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    showErr('이 브라우저는 마이크를 지원하지 않습니다. Safari 또는 Chrome을 사용해주세요.'); return;
+    showErr('마이크를 지원하지 않는 브라우저입니다. Safari 또는 Chrome을 이용해주세요.'); return;
   }
   let stream;
-  try{ stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false}); }
+  try{ stream = await navigator.mediaDevices.getUserMedia({audio:true}); }
   catch(e){
-    if(e.name==='NotAllowedError') showErr('마이크 권한이 거부됐습니다. 브라우저 설정에서 마이크 권한을 허용해주세요.');
+    if(e.name==='NotAllowedError') showErr('마이크 권한이 거부됐습니다. 브라우저 설정에서 허용해주세요.');
     else showErr('마이크 오류: '+e.message);
     return;
   }
   audioChunks=[];
-  const mime=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'].find(t=>{ try{return MediaRecorder.isTypeSupported(t);}catch(e){return false;} })||'';
-  try{ mediaRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:{}); }
+  const mime=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg']
+    .find(t=>{ try{return MediaRecorder.isTypeSupported(t);}catch{return false;} })||'';
+  try{ mediaRecorder=new MediaRecorder(stream, mime?{mimeType:mime}:{}); }
   catch(e){ mediaRecorder=new MediaRecorder(stream); }
   mediaRecorder.ondataavailable=e=>{ if(e.data&&e.data.size>0) audioChunks.push(e.data); };
   mediaRecorder.onstop=()=>{
@@ -366,7 +338,10 @@ async function startRec(){
   document.getElementById('recLabel').textContent='녹음 중... 버튼을 눌러 중지';
   document.getElementById('liveBox').classList.add('on');
   document.getElementById('liveBox').textContent='듣고 있습니다...';
-  recTimer=setInterval(()=>{ recSecs++; document.getElementById('recTimer').textContent=pad(Math.floor(recSecs/60))+':'+pad(recSecs%60); },1000);
+  recTimer=setInterval(()=>{
+    recSecs++;
+    document.getElementById('recTimer').textContent=pad(Math.floor(recSecs/60))+':'+pad(recSecs%60);
+  },1000);
 }
 
 function stopRec(){
@@ -374,12 +349,11 @@ function stopRec(){
   stopSTT(); recOn=false; clearInterval(recTimer);
   document.getElementById('recBtn').classList.remove('on');
   document.getElementById('recBtn').innerHTML='&#9679;';
-  document.getElementById('recLabel').textContent='녹음 완료 — AI가 미팅 노트를 정리 중...';
   document.getElementById('liveBox').classList.remove('on');
-  document.getElementById('recHint').textContent='';
-  // 녹음 완료 시 자동으로 1차 정리 시작
-  if(finalText.trim().length > 0) autoNote();
-  else {
+  if(finalText.trim().length>0){
+    document.getElementById('recLabel').textContent='녹음 완료 — AI 정리 중...';
+    autoNote();
+  } else {
     document.getElementById('recLabel').textContent='녹음 완료';
     document.getElementById('recHint').textContent='텍스트가 인식되지 않았습니다. 직접 입력을 이용해주세요.';
   }
@@ -391,145 +365,98 @@ function startSTT(){
   recognition=new SR();
   recognition.continuous=true; recognition.interimResults=true;
   recognition.lang=navigator.language?.startsWith('en')?'en-US':'ko-KR';
-  recognition.onstart=()=>{ document.getElementById('sttState').textContent='● 인식 중'; };
+  recognition.onstart=()=>document.getElementById('sttState').textContent='● 인식 중';
   recognition.onresult=e=>{
     interimText='';
     for(let i=e.resultIndex;i<e.results.length;i++){
       if(e.results[i].isFinal) finalText+=e.results[i][0].transcript+' ';
       else interimText+=e.results[i][0].transcript;
     }
-    document.getElementById('liveBox').innerHTML=finalText+(interimText?`<span class="interim">${interimText}</span>`:'');
+    document.getElementById('liveBox').innerHTML=
+      finalText+(interimText?`<span class="interim">${interimText}</span>`:'');
   };
-  recognition.onerror=ev=>{ if(ev.error==='no-speech') return; showErr('음성인식 오류: '+ev.error); };
+  recognition.onerror=ev=>{ if(ev.error!=='no-speech') showErr('음성인식 오류: '+ev.error); };
   recognition.onend=()=>{ if(recOn) recognition.start(); };
   recognition.start();
 }
-function stopSTT(){ if(recognition){try{recognition.stop();}catch(e){}} document.getElementById('sttState').textContent=''; }
 
-/* ── STEP 2: AI 1차 정리 (미팅 노트) ── */
+function stopSTT(){
+  if(recognition){ try{recognition.stop();}catch(e){} }
+  document.getElementById('sttState').textContent='';
+}
+
+/* ════════════════════════════════
+   STEP 2: AI 1차 정리
+   ════════════════════════════════ */
 async function autoNote(){
   document.getElementById('noteCard').style.display='block';
   document.getElementById('noteLoading').style.display='flex';
   document.getElementById('noteContent').style.display='none';
-
   const title=document.getElementById('meetingTitle').value||'TS LT Meeting';
   const date=document.getElementById('meetingDate').textContent;
   const att=document.getElementById('attendees').value||'';
-
-  const prompt=`You are a meeting note taker. Clean up the raw speech transcript below into clear, readable meeting notes.
-
+  const prompt=`You are a meeting note taker. Clean up the raw speech transcript into clear, readable meeting notes.
 Rules:
-- Remove filler words (um, uh, 어, 그, 저, 음, 아 etc.)
+- Remove filler words (um, uh, 어, 그, 저, 음 etc.)
 - Fix grammar naturally
-- Keep it as meeting NOTES (not full minutes) — bullet points style
+- Keep as meeting NOTES — bullet points style (•)
 - Group by topic if possible
-- Keep all important information
 - Write in the same language as the transcript
-- Format as plain text with bullet points (•)
-
-Meeting: ${title} | ${date} ${att?'| Attendees: '+att:''}
-
+Meeting: ${title} | ${date}${att?' | '+att:''}
 Raw transcript:
 ${finalText}
-
-Output clean meeting notes only. No JSON, no headers, just the notes.`;
-
+Output clean meeting notes only. No JSON, no headers.`;
   try{
-    const resp = await groqCall(prompt, 800);
-    const note = resp.trim();
-    document.getElementById('noteBox').textContent = note;
+    const note=await groqCall(prompt,800);
+    document.getElementById('noteBox').textContent=note.trim();
     document.getElementById('noteLoading').style.display='none';
     document.getElementById('noteContent').style.display='block';
     document.getElementById('recLabel').textContent='녹음 완료 ✓';
     showToast('1차 미팅 노트 정리 완료!');
-  } catch(e){
+  }catch(e){
+    document.getElementById('noteBox').textContent=finalText;
     document.getElementById('noteLoading').style.display='none';
     document.getElementById('noteContent').style.display='block';
-    document.getElementById('noteBox').textContent = finalText;
     showErr('1차 정리 오류: '+e.message);
   }
 }
 
-/* ── 미팅 노트 공유/복사 ── */
-window.shareNote = async function(){
-  const note = document.getElementById('noteBox').textContent;
-  const title = document.getElementById('meetingTitle').value||'TS LT Meeting';
-  const date = document.getElementById('meetingDate').textContent;
-  const text = `[${title}] 미팅 노트\n${date}\n\n${note}`;
-  if(navigator.share){
-    try{ await navigator.share({title:title+' 미팅 노트', text}); }
-    catch(e){ if(e.name!=='AbortError') showToast('공유 오류: '+e.message); }
-  } else {
-    await navigator.clipboard.writeText(text).catch(()=>{});
-    showToast('클립보드에 복사됐습니다!');
-  }
-};
+function copyNote(){
+  navigator.clipboard.writeText(document.getElementById('noteBox').textContent)
+    .then(()=>showToast('복사됐습니다!'))
+    .catch(()=>showToast('복사 실패'));
+}
 
-window.copyNote = async function(){
-  const note = document.getElementById('noteBox').textContent;
-  try{
-    await navigator.clipboard.writeText(note);
-    showToast('복사됐습니다!');
-  } catch(e){ showToast('복사 실패. 직접 선택해서 복사해주세요.'); }
-};
-
-/* ── STEP 3: 회의록 구조화 ── */
-window.runFullAI = async function(){
-  const note = document.getElementById('noteBox').textContent || finalText;
-  await structureMinutes(note);
-};
-
-window.runManual = async function(){
-  const text = document.getElementById('manualText').value.trim();
+/* ════════════════════════════════
+   STEP 3: 회의록 구조화
+   ════════════════════════════════ */
+function runStructure(){
+  const note=document.getElementById('noteBox').textContent||finalText;
+  structureMinutes(note);
+}
+function runManual(){
+  const text=document.getElementById('manualText').value.trim();
   if(!text){ showToast('내용을 입력해주세요'); return; }
-  await structureMinutes(text);
-};
+  structureMinutes(text);
+}
 
 async function structureMinutes(text){
-  if(!GROQ_API_KEY||GROQ_API_KEY==='YOUR_GROQ_API_KEY'){ showErr('Groq API 키를 설정해주세요.'); return; }
+  document.getElementById('noteCard').style.display='block';
+  document.getElementById('noteLoadMsg').textContent='회의록 구조화 중...';
+  document.getElementById('noteLoading').style.display='flex';
   document.getElementById('editCard').style.display='none';
   document.getElementById('exportCard').style.display='none';
-
-  // 로딩 표시 (noteCard 안에)
-  const noteCard = document.getElementById('noteCard');
-  noteCard.style.display='block';
-  document.getElementById('noteLoading').style.display='flex';
-  document.getElementById('noteLoading').querySelector('span') && (document.getElementById('noteLoading').textContent='');
-  document.getElementById('noteLoading').innerHTML='<div class="spinner"></div> 회의록 구조화 중...';
-
   const title=document.getElementById('meetingTitle').value||'TS LT Meeting';
   const date=document.getElementById('meetingDate').textContent;
   const att=document.getElementById('attendees').value||'(not specified)';
-
-  const prompt=`You are an expert meeting minutes writer. Transform the meeting notes into structured, professional meeting minutes.
-
-Instructions:
-- Use formal, professional business language
-- Group related topics together
-- Extract clear action items with owners and deadlines if mentioned
-- Write in the same language as the notes (Korean or English)
-- Make it read like a professionally written document
-
-Meeting Info:
-- Title: ${title}
-- Date: ${date}
-- Attendees: ${att}
-
-Meeting Notes:
-${text}
-
+  const prompt=`Structure this meeting transcript into professional meeting minutes.
+Remove filler words, fix grammar, use formal business language, group by topic.
+Meeting: ${title} | ${date} | ${att}
+Transcript: ${text}
 Reply ONLY with valid JSON (no markdown):
-{
-  "language": "Korean or English",
-  "purpose": "회의 목적 1~2문장",
-  "discussion": "주요 논의 내용을 주제별 단락으로 전문적으로 정리",
-  "decisions": "결정 사항을 명확하게",
-  "actions": [{"task":"action item","owner":"담당자 또는 빈칸","due":"기한 또는 빈칸"}],
-  "nextMeeting": "다음 회의 일정 또는 빈칸"
-}`;
-
+{"language":"Korean or English","purpose":"...","discussion":"...","decisions":"...","actions":[{"task":"...","owner":"...","due":"..."}],"nextMeeting":"..."}`;
   try{
-    const raw = await groqCall(prompt, 1500);
+    const raw=await groqCall(prompt,1500);
     let p;
     try{ p=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
     catch{ p={language:'Korean',purpose:'',discussion:raw,decisions:'',actions:[],nextMeeting:''}; }
@@ -538,163 +465,10 @@ Reply ONLY with valid JSON (no markdown):
     document.getElementById('editCard').style.display='block';
     document.getElementById('exportCard').style.display='block';
     showToast('회의록 구조화 완료!');
-  } catch(e){
+  }catch(e){
     document.getElementById('noteLoading').style.display='none';
     showErr('구조화 오류: '+e.message);
   }
-}
-
-/* ── 용어 학습 (localStorage) ── */
-function getContext(){
-  try{ return JSON.parse(localStorage.getItem('mm_context')||'{}'); }catch{ return {}; }
-}
-function saveContext(){
-  const ctx={
-    termMap:     document.getElementById('termMap').value.trim(),
-    styleGuide:  document.getElementById('styleGuide').value.trim(),
-    sampleMinutes:document.getElementById('sampleMinutes').value.trim()
-  };
-  localStorage.setItem('mm_context', JSON.stringify(ctx));
-  document.getElementById('contextSaved').style.display='block';
-  setTimeout(()=>document.getElementById('contextSaved').style.display='none', 3000);
-}
-window.saveContext=saveContext;
-
-function loadContextUI(){
-  const ctx=getContext();
-  document.getElementById('termMap').value         = ctx.termMap||'';
-  document.getElementById('styleGuide').value      = ctx.styleGuide||'';
-  document.getElementById('sampleMinutes').value   = ctx.sampleMinutes||'';
-}
-
-window.clearContext=function(){
-  if(!confirm('용어 학습 데이터를 모두 초기화할까요?')) return;
-  localStorage.removeItem('mm_context');
-  loadContextUI();
-  showToast('초기화됐습니다.');
-};
-
-function buildContextPrompt(){
-  const ctx=getContext();
-  let block='';
-  if(ctx.termMap){
-    block+=`\n\n[용어 매핑 — 반드시 아래 용어를 그대로 사용하세요]\n${ctx.termMap}`;
-  }
-  if(ctx.styleGuide){
-    block+=`\n\n[번역 스타일 가이드]\n${ctx.styleGuide}`;
-  }
-  if(ctx.sampleMinutes){
-    block+=`\n\n[참고 번역 샘플 — 이 문체와 스타일을 따르세요]\n${ctx.sampleMinutes}`;
-  }
-  return block;
-}
-
-window.testTranslate=async function(){
-  const text=document.getElementById('testInput').value.trim();
-  if(!text){ showToast('테스트할 텍스트를 입력해주세요'); return; }
-  document.getElementById('testOutput').style.display='none';
-  const btn=document.querySelector('#tabContext .btn-main');
-  btn.disabled=true; btn.textContent='번역 중...';
-  const ctx=buildContextPrompt();
-  const prompt=`Translate the following Korean text into professional English.${ctx}
-
-Text to translate:
-${text}
-
-Output only the translated text, nothing else.`;
-  try{
-    const result=await groqCall(prompt, 800);
-    document.getElementById('testResult').textContent=result.trim();
-    document.getElementById('testOutput').style.display='block';
-  }catch(e){ showToast('번역 오류: '+e.message); }
-  finally{ btn.disabled=false; btn.textContent='번역 테스트'; }
-};
-
-/* ── 영문 번역 ── */
-window.translateToEnglish = async function(){
-  const purpose   = document.getElementById('purpose').value.trim();
-  const discussion= document.getElementById('discussion').value.trim();
-  const decisions = document.getElementById('decisions').value.trim();
-  const nextMeet  = document.getElementById('nextMeeting').value.trim();
-  const actions   = Array.from(document.querySelectorAll('#actionList input')).map(i=>i.value).filter(Boolean);
-  const note      = document.getElementById('noteBox')?.textContent?.trim()||'';
-
-  if(!purpose && !discussion){ showToast('번역할 내용이 없습니다'); return; }
-
-  document.getElementById('translateBtn').disabled=true;
-  document.getElementById('translateLoading').style.display='flex';
-
-  const ctx=buildContextPrompt();
-  const prompt=`Translate the following meeting minutes content into professional English.
-Keep all formatting, bullet points, and structure exactly the same.
-Only translate the text — do not add or remove any information.${ctx}
-
-Reply ONLY with valid JSON (no markdown):
-{
-  "note": "translated note or empty",
-  "purpose": "translated purpose",
-  "discussion": "translated discussion",
-  "decisions": "translated decisions",
-  "actions": ["translated action 1", "translated action 2"],
-  "nextMeeting": "translated next meeting"
-}
-
-Content to translate:
-- Note: ${note}
-- Purpose: ${purpose}
-- Discussion: ${discussion}
-- Decisions: ${decisions}
-- Actions: ${actions.join(' | ')}
-- Next Meeting: ${nextMeet}`;
-
-  try{
-    const raw = await groqCall(prompt, 1500);
-    let p;
-    try{ p=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
-    catch{ showToast('번역 오류. 다시 시도해주세요.'); return; }
-
-    if(p.note && document.getElementById('noteBox'))
-      document.getElementById('noteBox').textContent = p.note;
-    document.getElementById('purpose').value    = p.purpose||'';
-    document.getElementById('discussion').value = p.discussion||'';
-    document.getElementById('decisions').value  = p.decisions||'';
-    document.getElementById('nextMeeting').value= p.nextMeeting||'';
-
-    // action items 교체
-    document.getElementById('actionList').innerHTML='';
-    const acts = p.actions||actions;
-    acts.forEach(a=>addAction(a));
-
-    // 언어 뱃지 변경
-    const b=document.getElementById('langBadge');
-    b.textContent='English'; b.className='badge badge-en';
-
-    showToast('영문 번역 완료! PDF 미리보기를 열고 있습니다...');
-    // 번역 완료 후 바로 PDF 웹 미리보기 열기
-    setTimeout(()=>openPrintWindow(getFormData()), 600);
-  }catch(e){
-    showToast('번역 오류: '+e.message);
-  }finally{
-    document.getElementById('translateBtn').disabled=false;
-    document.getElementById('translateLoading').style.display='none';
-  }
-};
-async function groqCall(prompt, maxTokens=1000){
-  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_API_KEY},
-    body:JSON.stringify({
-      model:'llama-3.3-70b-versatile',
-      messages:[
-        {role:'system',content:'You are a professional meeting assistant.'},
-        {role:'user',content:prompt}
-      ],
-      temperature:0.3, max_tokens:maxTokens
-    })
-  });
-  if(!resp.ok){ const e=await resp.json(); throw new Error(e?.error?.message||`HTTP ${resp.status}`); }
-  const data=await resp.json();
-  return data.choices?.[0]?.message?.content||'';
 }
 
 function fillForm(p){
@@ -708,14 +482,17 @@ function fillForm(p){
   document.getElementById('actionList').innerHTML='';
   const acts=p.actions||[];
   if(!acts.length) acts.push({task:'',owner:'',due:''});
-  acts.forEach(a=>{ const v=[a.task,a.owner?`(${a.owner})`:'',a.due?`→ ${a.due}`:''].filter(Boolean).join(' '); addAction(v); });
+  acts.forEach(a=>{
+    const v=[a.task,a.owner?`(${a.owner})`:'',a.due?`→ ${a.due}`:''].filter(Boolean).join(' ');
+    addAction(v);
+  });
 }
 
-window.addAction=function(val=''){
+function addAction(val=''){
   const d=document.createElement('div'); d.className='action-row';
   d.innerHTML=`<input type="text" placeholder="내용 | 담당자 | 기한" value="${val.replace(/"/g,'&quot;')}"><button class="del-btn" onclick="this.parentNode.remove()">×</button>`;
   document.getElementById('actionList').appendChild(d);
-};
+}
 
 function getFormData(){
   return {
@@ -731,57 +508,159 @@ function getFormData(){
   };
 }
 
-/* ── Firebase 저장 ── */
-window.saveToFirebase=async function(){
-  if(!db){ showToast('Firebase 연결을 확인해주세요'); return; }
-  const data=getFormData();
-  document.getElementById('noteLoading').style.display='flex';
-  document.getElementById('noteLoading').innerHTML='<div class="spinner"></div> Firebase에 저장 중...';
-  document.getElementById('noteCard').style.display='block';
+/* ════════════════════════════════
+   번역
+   ════════════════════════════════ */
+async function translateTo(lang){
+  const m=getFormData();
+  if(!m.purpose&&!m.discussion){ showToast('번역할 내용이 없습니다'); return; }
+  const isEn=lang==='en';
+  document.getElementById('btnToEn').disabled=true;
+  document.getElementById('btnToKo').disabled=true;
+  document.getElementById('translateMsg').textContent=isEn?'영문으로 번역 중...':'한글로 번역 중...';
+  document.getElementById('translateLoading').style.display='flex';
+  const ctx=buildContextPrompt();
+  const target=isEn?'professional English':'자연스러운 한국어 비즈니스 문체';
+  const prompt=`Translate the following meeting minutes into ${target}. Keep structure exactly the same.${ctx}
+Reply ONLY with valid JSON (no markdown):
+{"language":"${isEn?'English':'Korean'}","note":"...","purpose":"...","discussion":"...","decisions":"...","actions":["..."],"nextMeeting":"..."}
+Content:
+- Note: ${m.note}
+- Purpose: ${m.purpose}
+- Discussion: ${m.discussion}
+- Decisions: ${m.decisions}
+- Actions: ${m.actions.join(' | ')}
+- Next Meeting: ${m.nextMeeting}`;
   try{
-    await addDoc(collection(db,'minutes'),{...data, savedAt:new Date().toISOString(), createdAt:Date.now()});
-    document.getElementById('noteLoading').style.display='none';
-    updateCount();
-    showToast('☁️ Firebase에 저장됐습니다!');
-  }catch(e){
-    document.getElementById('noteLoading').style.display='none';
-    showToast('저장 오류: '+e.message);
+    const raw=await groqCall(prompt,1500);
+    let p; try{ p=JSON.parse(raw.replace(/```json|```/g,'').trim()); }catch{ showToast('번역 오류'); return; }
+    if(p.note) document.getElementById('noteBox').textContent=p.note;
+    document.getElementById('purpose').value=p.purpose||'';
+    document.getElementById('discussion').value=p.discussion||'';
+    document.getElementById('decisions').value=p.decisions||'';
+    document.getElementById('nextMeeting').value=p.nextMeeting||'';
+    document.getElementById('actionList').innerHTML='';
+    (p.actions||m.actions).forEach(a=>addAction(a));
+    const b=document.getElementById('langBadge');
+    b.textContent=isEn?'English':'한국어'; b.className='badge '+(isEn?'badge-en':'badge-ko');
+    showToast(isEn?'영문 번역 완료!':'한글 번역 완료!');
+    setTimeout(()=>openPrintWindow(getFormData()),500);
+  }catch(e){ showToast('번역 오류: '+e.message); }
+  finally{
+    document.getElementById('btnToEn').disabled=false;
+    document.getElementById('btnToKo').disabled=false;
+    document.getElementById('translateLoading').style.display='none';
   }
-};
+}
 
-/* ── Firebase 목록 ── */
+/* ════════════════════════════════
+   용어 학습
+   ════════════════════════════════ */
+function getContext(){ try{return JSON.parse(localStorage.getItem('mm_ctx')||'{}');}catch{return {};} }
+function saveContext(){
+  localStorage.setItem('mm_ctx',JSON.stringify({
+    termMap:document.getElementById('termMap').value.trim(),
+    styleGuide:document.getElementById('styleGuide').value.trim(),
+    sampleMinutes:document.getElementById('sampleMinutes').value.trim()
+  }));
+  document.getElementById('ctxSaved').style.display='block';
+  setTimeout(()=>document.getElementById('ctxSaved').style.display='none',2500);
+}
+function loadContextUI(){
+  const c=getContext();
+  document.getElementById('termMap').value=c.termMap||'';
+  document.getElementById('styleGuide').value=c.styleGuide||'';
+  document.getElementById('sampleMinutes').value=c.sampleMinutes||'';
+}
+function buildContextPrompt(){
+  const c=getContext(); let s='';
+  if(c.termMap) s+=`\n\n[용어 매핑 — 반드시 사용]\n${c.termMap}`;
+  if(c.styleGuide) s+=`\n\n[번역 스타일 가이드]\n${c.styleGuide}`;
+  if(c.sampleMinutes) s+=`\n\n[참고 번역 샘플]\n${c.sampleMinutes}`;
+  return s;
+}
+async function testTranslate(){
+  const text=document.getElementById('testInput').value.trim();
+  if(!text){ showToast('텍스트를 입력해주세요'); return; }
+  const btn=document.getElementById('testBtn');
+  btn.disabled=true; btn.textContent='번역 중...';
+  try{
+    const r=await groqCall(`Translate to professional English.${buildContextPrompt()}\nText: ${text}\nOutput translated text only.`,600);
+    document.getElementById('testResult').textContent=r.trim();
+    document.getElementById('testOutput').style.display='block';
+  }catch(e){ showToast('오류: '+e.message); }
+  finally{ btn.disabled=false; btn.textContent='번역 테스트 (→ 영문)'; }
+}
+
+/* ════════════════════════════════
+   Groq API
+   ════════════════════════════════ */
+async function groqCall(prompt,maxTokens=1000){
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_API_KEY},
+    body:JSON.stringify({
+      model:'llama-3.3-70b-versatile',
+      messages:[
+        {role:'system',content:'You are a professional meeting assistant.'},
+        {role:'user',content:prompt}
+      ],
+      temperature:0.3, max_tokens:maxTokens
+    })
+  });
+  if(!r.ok){ const e=await r.json(); throw new Error(e?.error?.message||`HTTP ${r.status}`); }
+  const d=await r.json();
+  return d.choices?.[0]?.message?.content||'';
+}
+
+/* ════════════════════════════════
+   Firebase
+   ════════════════════════════════ */
+async function saveToFirebase(){
+  if(!db){ showToast('Firebase 연결을 확인해주세요'); return; }
+  const { collection, addDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  const data=getFormData();
+  try{
+    await addDoc(collection(db,'minutes'),{...data,savedAt:new Date().toISOString(),createdAt:Date.now()});
+    updateCount(); showToast('☁️ Firebase에 저장됐습니다!');
+  }catch(e){ showToast('저장 오류: '+e.message); }
+}
+
 async function renderList(){
   const el=document.getElementById('minutesList');
   if(!db){ el.innerHTML='<div class="empty-state">Firebase 연결을 확인해주세요.</div>'; return; }
   el.innerHTML='<div class="loading-list">불러오는 중...</div>';
   try{
-    const q=query(collection(db,'minutes'),orderBy('createdAt','desc'));
-    const snap=await getDocs(q);
+    const { collection, getDocs, orderBy, query } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap=await getDocs(query(collection(db,'minutes'),orderBy('createdAt','desc')));
     if(snap.empty){ el.innerHTML='<div class="empty-state">저장된 회의록이 없습니다.</div>'; return; }
-    const items=[];
-    snap.forEach(d=>items.push({id:d.id,...d.data()}));
+    const items=[]; snap.forEach(d=>items.push({id:d.id,...d.data()}));
+    window._cache=items;
     document.getElementById('savedCount').textContent=`(${items.length})`;
     el.innerHTML=items.map(m=>`
-      <div class="minutes-item" id="item-${m.id}">
-        <div class="minutes-title">${m.title||'(제목 없음)'}</div>
-        <div class="minutes-meta">${m.date||''} ${m.attendees?'· '+m.attendees:''}</div>
-        <div class="minutes-btns">
-          <button class="btn-sm" onclick="loadMinutes('${m.id}')">불러오기</button>
-          <button class="btn-sm" onclick="downloadPDF('${m.id}')">PDF</button>
-    
-          <button class="btn-sm-danger" onclick="deleteMinutes('${m.id}')">삭제</button>
+      <div class="m-item">
+        <div class="m-title">${m.title||'(제목 없음)'}</div>
+        <div class="m-meta">${m.date||''} ${m.attendees?'· '+m.attendees:''}</div>
+        <div class="m-btns">
+          <button class="btn-sm" onclick="loadItem('${m.id}')">불러오기</button>
+          <button class="btn-sm" onclick="previewItem('${m.id}')">미리보기</button>
+          <button class="btn-sm" onclick="htmlItem('${m.id}')">HTML</button>
+          <button class="btn-sm-danger" onclick="deleteItem('${m.id}')">삭제</button>
         </div>
       </div>`).join('');
-    window._cache=items;
   }catch(e){ el.innerHTML=`<div class="empty-state">오류: ${e.message}</div>`; }
 }
 
 async function updateCount(){
   if(!db) return;
-  try{ const s=await getDocs(collection(db,'minutes')); document.getElementById('savedCount').textContent=s.size>0?`(${s.size})`:''; }catch(e){}
+  try{
+    const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const s=await getDocs(collection(db,'minutes'));
+    document.getElementById('savedCount').textContent=s.size>0?`(${s.size})`:'';
+  }catch(e){}
 }
 
-window.loadMinutes=function(id){
+function loadItem(id){
   const m=(window._cache||[]).find(x=>x.id===id); if(!m) return;
   document.getElementById('meetingTitle').value=m.title||'';
   document.getElementById('attendees').value=m.attendees||'';
@@ -794,241 +673,141 @@ window.loadMinutes=function(id){
   (m.actions||[]).forEach(a=>addAction(a));
   document.getElementById('editCard').style.display='block';
   document.getElementById('exportCard').style.display='block';
-  switchTab('new');
-  showToast('회의록을 불러왔습니다.');
-};
+  switchTab('new'); showToast('불러왔습니다.');
+}
 
-window.deleteMinutes=async function(id){
+function previewItem(id){ const m=(window._cache||[]).find(x=>x.id===id); if(m) openPrintWindow(m); }
+function htmlItem(id){ const m=(window._cache||[]).find(x=>x.id===id); if(m) doExportHTML(m); }
+
+async function deleteItem(id){
   if(!confirm('삭제할까요?')) return;
+  const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
   try{ await deleteDoc(doc(db,'minutes',id)); updateCount(); renderList(); showToast('삭제됐습니다.'); }
   catch(e){ showToast('삭제 오류: '+e.message); }
-};
+}
 
-window.downloadPDF=function(id){ const m=(window._cache||[]).find(x=>x.id===id); if(m) makePDF(m); };
-window.shareItem=async function(id){ const m=(window._cache||[]).find(x=>x.id===id); if(m) await doShare(m); };
-
-/* ── PDF ── */
-/* ── PDF: 브라우저 프린트 방식 (한글 완벽 지원) ── */
+/* ════════════════════════════════
+   PDF 미리보기 (웹)
+   ════════════════════════════════ */
 function openPrintWindow(m){
-  const esc=s=>(s||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-  const sec=(title,content)=>{
-    if(!content||content==='—') return '';
-    return `<div class="sec">
-      <div class="sec-title">${esc(title)}</div>
-      <div class="sec-body">${esc(content)}</div>
-    </div>`;
-  };
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>${esc(m.title||'Meeting Minutes')}</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
-      background:#fff;color:#1a1a1a;padding:20mm 18mm;font-size:11pt;line-height:1.7}
-    .header{background:#2c3e50;color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:20px}
-    .header h1{font-size:18pt;font-weight:700;margin-bottom:6px}
-    .header p{font-size:10pt;opacity:.85}
-    .sec{margin-bottom:16px;page-break-inside:avoid}
-    .sec-title{background:#2c3e50;color:#fff;padding:6px 12px;font-size:10pt;font-weight:600;border-radius:4px 4px 0 0}
-    .sec-body{border:1px solid #ddd;border-top:none;padding:10px 12px;font-size:10pt;
-      line-height:1.8;border-radius:0 0 4px 4px;white-space:pre-wrap;word-break:break-word}
-    .footer{margin-top:24px;font-size:9pt;color:#aaa;text-align:right;border-top:1px solid #eee;padding-top:8px}
-    @media print{
-      body{padding:10mm 12mm}
-      @page{margin:10mm}
-    }
-  </style></head><body>
-  <div class="header">
-    <h1>${esc(m.title||'Meeting Minutes')}</h1>
-    <p>${esc(m.date||'')}${m.attendees?' &nbsp;|&nbsp; 참석자: '+esc(m.attendees):''}</p>
-  </div>
-  ${sec('미팅 노트', m.note)}
-  ${sec('회의 목적', m.purpose)}
-  ${sec('주요 논의 내용', m.discussion)}
-  ${sec('결정 사항', m.decisions)}
-  ${sec('Action Items', (m.actions||[]).length?(m.actions).map((a,i)=>`${i+1}. ${a}`).join('\n'):'')}
-  ${sec('다음 회의 일정', m.nextMeeting)}
-  <div class="footer">Generated by Meeting Minutes Tool · ${m.date||''}</div>
-  <script>window.onload=function(){window.print();}<\/script>
-  </body></html>`;
-
-  const w=window.open('','_blank','width=800,height=900');
-  if(w){ w.document.write(html); w.document.close(); }
-  else { showToast('팝업이 차단됐습니다. 브라우저에서 팝업을 허용해주세요.'); }
-}
-
-async function makePDFBlob(m){
-  // 카카오톡 공유용: html2canvas로 blob 생성
-  const {jsPDF}=window.jspdf;
-  const esc=s=>(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const sec=(title,content)=>content?`
-    <div style="margin-bottom:14px">
-      <div style="background:#2c3e50;color:#fff;padding:6px 12px;font-size:13px;font-weight:600">${esc(title)}</div>
-      <div style="border:1px solid #ddd;padding:10px 12px;font-size:12px;line-height:1.8;white-space:pre-wrap">${esc(content)}</div>
-    </div>`:'';
-  const div=document.createElement('div');
-  div.style.cssText='width:750px;padding:32px;font-family:sans-serif;background:#fff;position:fixed;left:-9999px;top:0;';
-  div.innerHTML=`
-    <div style="background:#2c3e50;color:#fff;padding:16px 20px;margin-bottom:20px">
-      <div style="font-size:18px;font-weight:700;margin-bottom:4px">${esc(m.title||'Meeting Minutes')}</div>
-      <div style="font-size:12px;opacity:.85">${esc(m.date||'')} ${m.attendees?'| 참석자: '+esc(m.attendees):''}</div>
-    </div>
-    ${sec('미팅 노트',m.note)}
-    ${sec('회의 목적',m.purpose)}
-    ${sec('주요 논의 내용',m.discussion)}
-    ${sec('결정 사항',m.decisions)}
-    ${sec('Action Items',(m.actions||[]).map((a,i)=>`${i+1}. ${a}`).join('\n'))}
-    ${sec('다음 회의 일정',m.nextMeeting)}`;
-  document.body.appendChild(div);
-  try{
-    const canvas=await html2canvas(div,{scale:2,backgroundColor:'#fff',logging:false});
-    const imgW=210,pageH=297;
-    const imgH=canvas.height*imgW/canvas.width;
-    const doc=new jsPDF({unit:'mm',format:'a4'});
-    let y=0,pg=0;
-    while(y<imgH){
-      if(pg>0) doc.addPage();
-      doc.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,-y,imgW,imgH);
-      y+=pageH; pg++;
-    }
-    return doc.output('blob');
-  }finally{ document.body.removeChild(div); }
-}
-
-async function makePDF(m){ openPrintWindow(m); }
-
-
-window.exportHTML = function(){
-  const m = getFormData();
-  const isEn = document.getElementById('langBadge')?.textContent==='English';
-  const labels = isEn
-    ? {note:'Meeting Notes',purpose:'Meeting Purpose',discussion:'Key Discussion',
-       decisions:'Decisions',actions:'Action Items',next:'Next Meeting',att:'Attendees'}
-    : {note:'미팅 노트',purpose:'회의 목적',discussion:'주요 논의 내용',
-       decisions:'결정 사항',actions:'Action Items',next:'다음 회의 일정',att:'참석자'};
+  const isEn=document.getElementById('langBadge')?.textContent==='English';
+  const L=isEn
+    ?{note:'Meeting Notes',purpose:'Meeting Purpose',discussion:'Key Discussion',decisions:'Decisions',actions:'Action Items',next:'Next Meeting',att:'Attendees'}
+    :{note:'미팅 노트',purpose:'회의 목적',discussion:'주요 논의 내용',decisions:'결정 사항',actions:'Action Items',next:'다음 회의 일정',att:'참석자'};
   const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-  const sec=(icon,title,content)=>{
-    if(!content) return '';
-    return `<div class="section">
-      <div class="section-header"><span class="icon">${icon}</span>${title}</div>
-      <div class="section-body">${esc(content)}</div>
-    </div>`;
-  };
-  const actList = (m.actions||[]).length
-    ? m.actions.map((a,i)=>`<div class="action-item"><span class="action-num">${i+1}</span>${esc(a)}</div>`).join('')
-    : '<span style="color:#aaa">—</span>';
+  const sec=(t,c)=>c&&c!=='—'?`<div class="sec"><div class="sec-t">${t}</div><div class="sec-b">${esc(c)}</div></div>`:'';
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(m.title)}</title>
+  <style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#f0f2f5;padding:24px}
+  .wrap{max-width:780px;margin:0 auto}
+  .toolbar{display:flex;gap:10px;justify-content:flex-end;margin-bottom:14px}
+  .toolbar button{padding:10px 20px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500;border:none}
+  .btn-p{background:#2c3e50;color:#fff} .btn-c{background:#fff;color:#555;border:1px solid #ddd!important}
+  .page{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .hero{background:linear-gradient(135deg,#2c3e50,#3d5a73);color:#fff;padding:28px 32px}
+  .hero h1{font-size:20px;font-weight:700;margin-bottom:8px}
+  .hero p{font-size:12px;opacity:.8}
+  .body{padding:24px 28px}
+  .sec{margin-bottom:16px}
+  .sec-t{background:#2c3e50;color:#fff;padding:7px 14px;font-size:12px;font-weight:600;border-radius:6px 6px 0 0}
+  .sec-b{border:1px solid #ddd;border-top:none;padding:12px 14px;font-size:13px;line-height:1.9;border-radius:0 0 6px 6px;background:#fafafa;white-space:pre-wrap;word-break:break-word}
+  .foot{padding:14px 28px;font-size:11px;color:#aaa;text-align:right;border-top:1px solid #eee}
+  @media print{body{background:#fff;padding:0}.toolbar{display:none}.page{box-shadow:none;border-radius:0}@page{margin:12mm}}
+  </style></head><body>
+  <div class="wrap">
+    <div class="toolbar">
+      <button class="btn-c" onclick="window.close()">닫기</button>
+      <button class="btn-p" onclick="window.print()">🖨️ PDF로 저장</button>
+    </div>
+    <div class="page">
+      <div class="hero">
+        <h1>${esc(m.title||'Meeting Minutes')}</h1>
+        <p>${esc(m.date||'')}${m.attendees?' | '+L.att+': '+esc(m.attendees):''}</p>
+      </div>
+      <div class="body">
+        ${sec(L.note,m.note)}
+        ${sec(L.purpose,m.purpose)}
+        ${sec(L.discussion,m.discussion)}
+        ${sec(L.decisions,m.decisions)}
+        ${(m.actions||[]).length?`<div class="sec"><div class="sec-t">${L.actions}</div><div class="sec-b">${(m.actions).map((a,i)=>`${i+1}. ${esc(a)}`).join('<br>')}</div></div>`:''}
+        ${sec(L.next,m.nextMeeting)}
+      </div>
+      <div class="foot">Generated by Meeting Minutes Tool · ${esc(m.date||'')}</div>
+    </div>
+  </div>
+  </body></html>`;
+  const w=window.open('','_blank','width=860,height=960');
+  if(w){ w.document.write(html); w.document.close(); }
+  else showToast('팝업이 차단됐습니다. 팝업을 허용해주세요.');
+}
 
+/* ════════════════════════════════
+   HTML 내보내기
+   ════════════════════════════════ */
+function doExportHTML(m){
+  const isEn=document.getElementById('langBadge')?.textContent==='English';
+  const L=isEn
+    ?{note:'Meeting Notes',purpose:'Meeting Purpose',discussion:'Key Discussion',decisions:'Decisions',actions:'Action Items',next:'Next Meeting',att:'Attendees'}
+    :{note:'미팅 노트',purpose:'회의 목적',discussion:'주요 논의 내용',decisions:'결정 사항',actions:'Action Items',next:'다음 회의 일정',att:'참석자'};
+  const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  const sec=(icon,t,c)=>c?`<div class="section"><div class="section-header"><span>${icon}</span>${t}</div><div class="section-body">${esc(c)}</div></div>`:'';
   const html=`<!DOCTYPE html>
-<html lang="${isEn?'en':'ko'}">
-<head>
-<meta charset="UTF-8">
+<html lang="${isEn?'en':'ko'}"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>${esc(m.title||'Meeting Minutes')} · ${esc(m.date||'')}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR','Segoe UI',sans-serif;
-  background:#f0f2f5;color:#1a1a1a;min-height:100vh;padding:32px 16px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#f0f2f5;padding:32px 16px;min-height:100vh}
 .container{max-width:780px;margin:0 auto}
-.hero{background:linear-gradient(135deg,#2c3e50 0%,#3d5a73 100%);color:#fff;
-  border-radius:16px;padding:32px 36px;margin-bottom:20px;position:relative;overflow:hidden}
-.hero::after{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;
-  background:rgba(255,255,255,.05);border-radius:50%}
-.hero-title{font-size:24px;font-weight:700;margin-bottom:10px;line-height:1.3}
-.hero-meta{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;opacity:.8}
-.hero-meta span{display:flex;align-items:center;gap:6px}
-.section{background:#fff;border-radius:12px;margin-bottom:12px;overflow:hidden;
-  box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.section-header{background:#f8f9fa;padding:12px 20px;font-size:13px;font-weight:600;
-  color:#2c3e50;border-bottom:2px solid #2c3e50;display:flex;align-items:center;gap:8px}
-.icon{font-size:15px}
-.section-body{padding:16px 20px;font-size:14px;line-height:1.9;color:#333;word-break:break-word}
-.action-item{display:flex;align-items:flex-start;gap:12px;padding:8px 0;
-  border-bottom:0.5px solid #f0f0f0}
+.hero{background:linear-gradient(135deg,#2c3e50,#3d5a73);color:#fff;border-radius:16px;padding:32px 36px;margin-bottom:20px}
+.hero-title{font-size:22px;font-weight:700;margin-bottom:10px;line-height:1.3}
+.hero-meta{font-size:13px;opacity:.8;display:flex;flex-wrap:wrap;gap:12px}
+.section{background:#fff;border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.section-header{background:#f8f9fa;padding:12px 20px;font-size:13px;font-weight:600;color:#2c3e50;border-bottom:2px solid #2c3e50;display:flex;align-items:center;gap:8px}
+.section-body{padding:16px 20px;font-size:14px;line-height:1.9;color:#333;white-space:pre-wrap;word-break:break-word}
+.action-item{display:flex;gap:12px;padding:8px 0;border-bottom:0.5px solid #f0f0f0}
 .action-item:last-child{border-bottom:none}
-.action-num{background:#2c3e50;color:#fff;width:22px;height:22px;border-radius:50%;
-  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.action-num{background:#2c3e50;color:#fff;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
 .footer{text-align:center;padding:20px;font-size:12px;color:#aaa}
-.badge{display:inline-block;background:rgba(255,255,255,.15);padding:3px 10px;
-  border-radius:20px;font-size:11px;margin-top:8px}
-@media(max-width:600px){
-  body{padding:16px 12px}
-  .hero{padding:24px 20px}
-  .hero-title{font-size:20px}
-  .section-body{padding:14px 16px}
-}
-@media print{
-  body{background:#fff;padding:0}
-  .container{max-width:100%}
-  .hero{border-radius:0}
-  .section{box-shadow:none;border:1px solid #eee}
-  .footer{display:none}
-}
-</style>
-</head>
-<body>
+@media(max-width:600px){body{padding:16px 12px}.hero{padding:24px 20px}.hero-title{font-size:18px}}
+@media print{body{background:#fff;padding:0}.hero{border-radius:0}.section{box-shadow:none;border:1px solid #eee}.footer{display:none}}
+</style></head><body>
 <div class="container">
   <div class="hero">
     <div class="hero-title">${esc(m.title||'Meeting Minutes')}</div>
     <div class="hero-meta">
       <span>📅 ${esc(m.date||'')}</span>
       ${m.attendees?`<span>👥 ${esc(m.attendees)}</span>`:''}
+      ${isEn?'<span>🌐 English</span>':''}
     </div>
-    ${isEn?'<div class="badge">🌐 English</div>':''}
   </div>
-
-  ${sec('🎯', labels.purpose, m.purpose)}
-  ${sec('💬', labels.discussion, m.discussion)}
-  ${sec('✅', labels.decisions, m.decisions)}
-
-  ${(m.actions||[]).length?`
-  <div class="section">
-    <div class="section-header"><span class="icon">📋</span>${labels.actions}</div>
-    <div class="section-body">${actList}</div>
-  </div>`:''}
-
-  ${sec('📅', labels.next, m.nextMeeting)}
-  ${sec('📝', labels.note, m.note)}
-
+  ${sec('🎯',L.purpose,m.purpose)}
+  ${sec('💬',L.discussion,m.discussion)}
+  ${sec('✅',L.decisions,m.decisions)}
+  ${(m.actions||[]).length?`<div class="section"><div class="section-header"><span>📋</span>${L.actions}</div><div class="section-body">${(m.actions).map((a,i)=>`<div class="action-item"><div class="action-num">${i+1}</div><div>${esc(a)}</div></div>`).join('')}</div></div>`:''}
+  ${sec('📅',L.next,m.nextMeeting)}
+  ${sec('📝',L.note,m.note)}
   <div class="footer">Generated by Meeting Minutes Tool · ${esc(m.date||'')}</div>
-</div>
-</body></html>`;
-
-  // 파일 다운로드
-  const dateStr=(m.date||'').replace(/[^0-9a-zA-Z가-힣]/g,'_').replace(/_+/g,'_');
-  const titleStr=(m.title||'minutes').replace(/\s+/g,'_');
-  const fname=`${dateStr}_${titleStr}.html`;
+</div></body></html>`;
+  const dateStr=(m.date||'').replace(/[^0-9a-zA-Z]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+  const fname=`${dateStr}_${(m.title||'minutes').replace(/\s+/g,'_')}.html`;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=fname;
-  a.click();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; a.click();
   URL.revokeObjectURL(a.href);
   showToast('HTML 파일이 저장됐습니다!');
-
-  // 웹 미리보기도 함께 열기
   const w=window.open('','_blank','width=860,height:960');
   if(w){ w.document.write(html); w.document.close(); }
-};
-
-
-async function doShare(m){
-  const blob=makePDFBlob(m);
-  const fn=(m.title||'minutes').replace(/\s+/g,'_')+'_minutes.pdf';
-  const file=new File([blob],fn,{type:'application/pdf'});
-  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-    try{ await navigator.share({title:m.title+' Meeting Minutes', text:`[${m.title}] 회의록\n날짜: ${m.date}\n참석자: ${m.attendees||'—'}`, files:[file]}); }
-    catch(e){ if(e.name!=='AbortError') showToast('공유 오류: '+e.message); }
-  } else {
-    makePDF(m);
-    showToast('PDF 저장 완료! 카카오톡에서 파일로 공유하세요.');
-  }
 }
 
-window.shareKakao=async function(){ await doShare(getFormData()); };
+function exportPDF(){ openPrintWindow(getFormData()); }
+function exportHTML(){ doExportHTML(getFormData()); }
 
+/* ════════════════════════════════
+   유틸
+   ════════════════════════════════ */
 function showErr(msg){ const el=document.getElementById('errBox'); el.textContent=msg; el.style.display='block'; }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
-
-updateCount();
 </script>
 </body>
 </html>
