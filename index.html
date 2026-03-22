@@ -448,10 +448,11 @@ async function structureMinutes(text){
 
 Instructions:
 - Use formal, professional business language
+- Format ALL sections (purpose, discussion, decisions, nextMeeting) as bullet points using "•" character
+- Each bullet point should be on a new line starting with "•"
 - Group related topics together
 - Extract clear action items with owners and deadlines if mentioned
 - Write in the same language as the notes (Korean or English)
-- Make it read like a professionally written document
 
 Meeting Info:
 - Title: ${title}
@@ -464,11 +465,11 @@ ${text}
 Reply ONLY with valid JSON (no markdown):
 {
   "language": "Korean or English",
-  "purpose": "회의 목적 1~2문장",
-  "discussion": "주요 논의 내용을 주제별 단락으로 전문적으로 정리",
-  "decisions": "결정 사항을 명확하게",
+  "purpose": "• 목적1\n• 목적2",
+  "discussion": "• 논의항목1\n• 논의항목2\n• 논의항목3",
+  "decisions": "• 결정사항1\n• 결정사항2",
   "actions": [{"task":"action item","owner":"담당자 또는 빈칸","due":"기한 또는 빈칸"}],
-  "nextMeeting": "다음 회의 일정 또는 빈칸"
+  "nextMeeting": "• 일정 정보"
 }`;
 
   try{
@@ -627,31 +628,52 @@ async function buildDoc(m, lang='ko'){
     discussion:'주요 논의 내용', decisions:'결정 사항', actions:'Action Items', next:'다음 회의 일정'
   };
 
-  // 영문판은 AI로 번역
   let data = {...m};
-  if(isEn && m.purpose){
+
+  // 영문 번역 — 필드별 개별 번역
+  if(isEn){
+    showToast('영문 번역 중...');
     try{
-      showToast('영문 번역 중...');
-      const translated = await groqCall(`Translate the following Korean meeting minutes fields to professional English. Reply ONLY with valid JSON:
-{
-  "purpose": "${(m.purpose||'').replace(/"/g,"'")}",
-  "discussion": "${(m.discussion||'').replace(/"/g,"'")}",
-  "decisions": "${(m.decisions||'').replace(/"/g,"'")}",
-  "note": "${(m.note||'').replace(/"/g,"'")}",
-  "nextMeeting": "${(m.nextMeeting||'').replace(/"/g,"'")}",
-  "actions": ${JSON.stringify(m.actions||[])}
-}`, 1500);
-      const parsed = JSON.parse(translated.replace(/```json|```/g,'').trim());
-      data = {...m, ...parsed};
-    } catch(e){ /* 번역 실패 시 원문 사용 */ }
+      const fieldsToTranslate = [
+        {key:'note',    val: m.note||''},
+        {key:'purpose', val: m.purpose||''},
+        {key:'discussion', val: m.discussion||''},
+        {key:'decisions',  val: m.decisions||''},
+        {key:'nextMeeting',val: m.nextMeeting||''},
+      ];
+      for(const f of fieldsToTranslate){
+        if(!f.val) continue;
+        const translated = await groqCall(
+          `Translate the following Korean text to professional English. Output ONLY the translated text, nothing else:\n\n${f.val}`,
+          800
+        );
+        data[f.key] = translated.trim();
+      }
+      // actions 번역
+      if(m.actions && m.actions.length){
+        const translatedActions = [];
+        for(const a of m.actions){
+          if(!a) continue;
+          const t = await groqCall(
+            `Translate this Korean action item to English. Output ONLY the translated text:\n\n${a}`,
+            200
+          );
+          translatedActions.push(t.trim());
+        }
+        data.actions = translatedActions;
+      }
+    } catch(e){
+      showToast('번역 오류 — 원문으로 생성합니다');
+    }
   }
 
   const el = document.createElement('div');
   el.style.cssText = `
     width:794px; padding:40px;
-    font-family:${isEn?"'Arial','Helvetica',sans-serif":"'Apple SD Gothic Neo','Malgun Gothic','NanumGothic',sans-serif"};
+    font-family:${isEn ? "'Arial','Helvetica',sans-serif" : "'Apple SD Gothic Neo','Malgun Gothic','NanumGothic',sans-serif"};
     background:#fff; color:#222; position:fixed; left:-9999px; top:0;
   `;
+
   const actions = (data.actions||[]).length
     ? (data.actions).map((a,i)=>`<div style="margin:4px 0">${i+1}. ${a}</div>`).join('')
     : '—';
@@ -663,7 +685,7 @@ async function buildDoc(m, lang='ko'){
       <div style="font-size:13px;opacity:.85">${labels.attendees}: ${data.attendees||'—'}</div>
     </div>
     ${data.note ? sec(labels.note, data.note.replace(/\n/g,'<br>')) : ''}
-    ${sec(labels.purpose,  (data.purpose||'—').replace(/\n/g,'<br>'))}
+    ${sec(labels.purpose,   (data.purpose||'—').replace(/\n/g,'<br>'))}
     ${sec(labels.discussion,(data.discussion||'—').replace(/\n/g,'<br>'))}
     ${sec(labels.decisions, (data.decisions||'—').replace(/\n/g,'<br>'))}
     ${sec(labels.actions, actions)}
