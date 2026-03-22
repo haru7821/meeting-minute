@@ -417,11 +417,11 @@ async function structureMinutes(text){
   const att=document.getElementById('attendees').value||'(not specified)';
   try{
     const raw=await groqCall(
-      `Structure this meeting transcript into professional minutes. Remove filler words, fix grammar, use formal language.
+      `Structure this meeting transcript into professional minutes. Remove filler words, fix grammar, use formal language. Write in Korean regardless of the input language — translate to Korean if needed.
 Meeting: ${title} | ${date} | ${att}
 Transcript: ${text}
 Reply ONLY valid JSON (no markdown):
-{"language":"Korean or English","purpose":"...","discussion":"...","decisions":"...","actions":[{"task":"...","owner":"...","due":"..."}],"nextMeeting":"..."}`,1500);
+{"language":"Korean","purpose":"...","discussion":"...","decisions":"...","actions":[{"task":"...","owner":"...","due":"..."}],"nextMeeting":"..."}`,1500);
     let p; try{p=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{p={language:'Korean',purpose:'',discussion:raw,decisions:'',actions:[],nextMeeting:''};}
     fillForm(p);
     document.getElementById('noteLoading').style.display='none';
