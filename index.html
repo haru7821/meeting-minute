@@ -183,14 +183,21 @@ const GROQ_API_KEY = 'YOUR_GROQ_API_KEY';
    Firebase Console → 프로젝트 설정 → 앱 추가 → firebaseConfig 복사
    ═══════════════════════════════════════════════ */
 const firebaseConfig = {
-  apiKey:            "YOUR_FIREBASE_API_KEY",
-  authDomain:        "YOUR_PROJECT.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  apiKey: "AIzaSyCprFdE4--bPbMkWlfmhGWwwdMb9vW_am8",
+  authDomain: "meeting-minute-204a2.firebaseapp.com",
+  projectId: "meeting-minute-204a2",
+  storageBucket: "meeting-minute-204a2.firebasestorage.app",
+  messagingSenderId: "644166640712",
+  appId: "1:644166640712:web:bb6cf34f0754deb62c647d"
 };
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+
+
+  
 /* ── Firebase 초기화 ── */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query }
