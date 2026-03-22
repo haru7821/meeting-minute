@@ -378,7 +378,8 @@ async function autoNote(){
     const note=await groqCall(
       `Clean up this raw speech transcript into clear meeting notes.
 Remove filler words (um,uh,어,그,저,음), fix grammar, use bullet points (•), group by topic.
-Write in the same language as the transcript.
+Write in Korean.
+${buildContextPrompt()}
 Meeting: ${title} | ${date}${att?' | '+att:''}
 Transcript: ${finalText}
 Output notes only, no JSON, no headers.`, 800);
@@ -418,6 +419,7 @@ async function structureMinutes(text){
   try{
     const raw=await groqCall(
       `Structure this meeting transcript into professional minutes. Remove filler words, fix grammar, use formal language. Write in Korean regardless of the input language — translate to Korean if needed.
+${buildContextPrompt()}
 Meeting: ${title} | ${date} | ${att}
 Transcript: ${text}
 Reply ONLY valid JSON (no markdown):
