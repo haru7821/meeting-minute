@@ -108,6 +108,7 @@ audio{width:100%;border-radius:10px;margin-top:8px}
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('new')">새 회의록</button>
       <button class="tab-btn" onclick="switchTab('saved')">저장된 회의록 <span id="savedCount"></span></button>
+      <button class="tab-btn" onclick="switchTab('context')">용어 학습</button>
     </div>
   </div>
 
@@ -218,6 +219,55 @@ audio{width:100%;border-radius:10px;margin-top:8px}
     </div>
   </div>
 
+  <!-- 용어 학습 탭 -->
+  <div id="tabContext" style="display:none">
+
+    <div class="card">
+      <h2>회사 용어 &amp; 번역 가이드</h2>
+      <p class="sub" style="margin-bottom:12px">자주 사용하는 용어, 사람 이름, 제품명 등을 등록하면 AI가 번역 시 참조해요.</p>
+      <label>한글 → 영문 용어 매핑</label>
+      <p class="sub" style="margin-bottom:8px">한 줄에 하나씩: <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px">한글용어 = English Term</code></p>
+      <textarea id="termMap" rows="8" placeholder="예:
+TS LT = TS Leadership Team
+분기 목표 = Quarterly Target
+매출 = Revenue
+김지수 = Kim Jisu
+워크오더 = Work Order (WO)
+납품 = Delivery"></textarea>
+      <label style="margin-top:14px">번역 스타일 가이드</label>
+      <p class="sub" style="margin-bottom:8px">번역 시 참고할 문체, 톤, 규칙 등을 자유롭게 입력하세요.</p>
+      <textarea id="styleGuide" rows="5" placeholder="예:
+- 공식적이고 전문적인 비즈니스 영어 사용
+- 수동태보다 능동태 선호
+- Action Items는 동사원형으로 시작
+- 직급은 번역하지 않고 한글 그대로 유지 (예: 팀장 → 팀장)
+- 숫자와 날짜는 영미식으로 변환"></textarea>
+      <label style="margin-top:14px">참고용 기존 회의록 샘플</label>
+      <p class="sub" style="margin-bottom:8px">잘 번역된 과거 회의록을 붙여넣으면 AI가 문체를 학습해요.</p>
+      <textarea id="sampleMinutes" rows="8" placeholder="예:
+[한글]
+Q1 영업 목표 달성률은 87%이며, 주요 원인은 신규 거래처 확보 지연입니다.
+
+[English]
+The Q1 sales target achievement rate was 87%, primarily due to delays in securing new business accounts."></textarea>
+      <button class="btn-green" onclick="saveContext()" style="margin-top:12px">저장하기</button>
+      <button class="btn-sm" onclick="clearContext()" style="margin-top:8px;width:100%">초기화</button>
+      <div id="contextSaved" style="display:none;font-size:12px;color:#27ae60;margin-top:8px;text-align:center">✓ 저장됐습니다. 다음 번역부터 적용돼요.</div>
+    </div>
+
+    <div class="card">
+      <h2>번역 테스트</h2>
+      <p class="sub" style="margin-bottom:10px">등록한 용어와 가이드가 잘 적용되는지 테스트해보세요.</p>
+      <textarea id="testInput" rows="4" placeholder="테스트할 한글 텍스트 입력..."></textarea>
+      <button class="btn-main" onclick="testTranslate()" style="margin-top:8px">번역 테스트</button>
+      <div id="testOutput" style="display:none;margin-top:12px">
+        <label>번역 결과</label>
+        <div class="note-box" id="testResult"></div>
+      </div>
+    </div>
+
+  </div>
+
 </div>
 <div class="toast" id="toast"></div>
 
@@ -259,12 +309,15 @@ document.getElementById('meetingDate').textContent =
 
 /* ── 탭 ── */
 window.switchTab = function(t){
-  document.getElementById('tabNew').style.display = t==='new'?'block':'none';
-  document.getElementById('tabSaved').style.display = t==='saved'?'block':'none';
+  document.getElementById('tabNew').style.display      = t==='new'    ?'block':'none';
+  document.getElementById('tabSaved').style.display    = t==='saved'  ?'block':'none';
+  document.getElementById('tabContext').style.display  = t==='context'?'block':'none';
   document.querySelectorAll('.tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',(i===0&&t==='new')||(i===1&&t==='saved'));
+    b.classList.toggle('active',
+      (i===0&&t==='new')||(i===1&&t==='saved')||(i===2&&t==='context'));
   });
   if(t==='saved') renderList();
+  if(t==='context') loadContextUI();
 };
 
 /* ── 녹음 + STT ── */
@@ -486,6 +539,72 @@ Reply ONLY with valid JSON (no markdown):
   }
 }
 
+/* ── 용어 학습 (localStorage) ── */
+function getContext(){
+  try{ return JSON.parse(localStorage.getItem('mm_context')||'{}'); }catch{ return {}; }
+}
+function saveContext(){
+  const ctx={
+    termMap:     document.getElementById('termMap').value.trim(),
+    styleGuide:  document.getElementById('styleGuide').value.trim(),
+    sampleMinutes:document.getElementById('sampleMinutes').value.trim()
+  };
+  localStorage.setItem('mm_context', JSON.stringify(ctx));
+  document.getElementById('contextSaved').style.display='block';
+  setTimeout(()=>document.getElementById('contextSaved').style.display='none', 3000);
+}
+window.saveContext=saveContext;
+
+function loadContextUI(){
+  const ctx=getContext();
+  document.getElementById('termMap').value         = ctx.termMap||'';
+  document.getElementById('styleGuide').value      = ctx.styleGuide||'';
+  document.getElementById('sampleMinutes').value   = ctx.sampleMinutes||'';
+}
+
+window.clearContext=function(){
+  if(!confirm('용어 학습 데이터를 모두 초기화할까요?')) return;
+  localStorage.removeItem('mm_context');
+  loadContextUI();
+  showToast('초기화됐습니다.');
+};
+
+function buildContextPrompt(){
+  const ctx=getContext();
+  let block='';
+  if(ctx.termMap){
+    block+=`\n\n[용어 매핑 — 반드시 아래 용어를 그대로 사용하세요]\n${ctx.termMap}`;
+  }
+  if(ctx.styleGuide){
+    block+=`\n\n[번역 스타일 가이드]\n${ctx.styleGuide}`;
+  }
+  if(ctx.sampleMinutes){
+    block+=`\n\n[참고 번역 샘플 — 이 문체와 스타일을 따르세요]\n${ctx.sampleMinutes}`;
+  }
+  return block;
+}
+
+window.testTranslate=async function(){
+  const text=document.getElementById('testInput').value.trim();
+  if(!text){ showToast('테스트할 텍스트를 입력해주세요'); return; }
+  document.getElementById('testOutput').style.display='none';
+  const btn=document.querySelector('#tabContext .btn-main');
+  btn.disabled=true; btn.textContent='번역 중...';
+  const ctx=buildContextPrompt();
+  const prompt=`Translate the following Korean text into professional English.${ctx}
+
+Text to translate:
+${text}
+
+Output only the translated text, nothing else.`;
+  try{
+    const result=await groqCall(prompt, 800);
+    document.getElementById('testResult').textContent=result.trim();
+    document.getElementById('testOutput').style.display='block';
+  }catch(e){ showToast('번역 오류: '+e.message); }
+  finally{ btn.disabled=false; btn.textContent='번역 테스트'; }
+};
+
 /* ── 영문 번역 ── */
 window.translateToEnglish = async function(){
   const purpose   = document.getElementById('purpose').value.trim();
@@ -500,9 +619,10 @@ window.translateToEnglish = async function(){
   document.getElementById('translateBtn').disabled=true;
   document.getElementById('translateLoading').style.display='flex';
 
+  const ctx=buildContextPrompt();
   const prompt=`Translate the following meeting minutes content into professional English.
 Keep all formatting, bullet points, and structure exactly the same.
-Only translate the text — do not add or remove any information.
+Only translate the text — do not add or remove any information.${ctx}
 
 Reply ONLY with valid JSON (no markdown):
 {
@@ -544,7 +664,9 @@ Content to translate:
     const b=document.getElementById('langBadge');
     b.textContent='English'; b.className='badge badge-en';
 
-    showToast('영문 번역 완료!');
+    showToast('영문 번역 완료! PDF 미리보기를 열고 있습니다...');
+    // 번역 완료 후 바로 PDF 웹 미리보기 열기
+    setTimeout(()=>openPrintWindow(getFormData()), 600);
   }catch(e){
     showToast('번역 오류: '+e.message);
   }finally{
