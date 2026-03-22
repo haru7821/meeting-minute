@@ -188,11 +188,12 @@ audio{width:100%;border-radius:10px;margin-top:8px}
         <button class="btn-ghost" onclick="addAction()">+ Action Item 추가</button>
       </div>
       <div class="sec"><label>다음 회의 일정</label><input type="text" id="nextMeeting" placeholder="예: 2025년 4월 5일 14:00"></div>
-      <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid #eee;display:flex;gap:8px;align-items:center">
-        <button class="btn-sm" id="translateBtn" onclick="translateToEnglish()" style="background:#f0f7ff;border-color:#b3d4f5;color:#1a5fa8;font-weight:500">🌐 영문으로 변환</button>
-        <span style="font-size:12px;color:#aaa">현재 내용을 영어로 번역합니다</span>
+      <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid #eee;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn-sm" id="translateBtn" onclick="translateTo('en')" style="background:#f0f7ff;border-color:#b3d4f5;color:#1a5fa8;font-weight:500">🌐 영문으로 변환</button>
+        <button class="btn-sm" id="translateKoBtn" onclick="translateTo('ko')" style="background:#f0fff4;border-color:#b3e6c8;color:#1a6fa8;font-weight:500">🇰🇷 한글로 변환</button>
+        <span style="font-size:12px;color:#aaa">현재 내용을 번역합니다</span>
       </div>
-      <div id="translateLoading" style="display:none" class="loading-row"><div class="spinner"></div> 영문으로 번역 중...</div>
+      <div id="translateLoading" style="display:none" class="loading-row"><div class="spinner"></div> <span id="translateLoadingMsg">번역 중...</span></div>
     </div>
 
     <!-- STEP 4: 저장 & 내보내기 -->
@@ -207,7 +208,7 @@ audio{width:100%;border-radius:10px;margin-top:8px}
       <button class="btn-green" onclick="saveToFirebase()">☁️ Firebase에 저장하기</button>
       <button class="btn-pdf" onclick="exportPDF()" style="margin-top:8px">PDF 다운로드</button>
       <button class="btn-blue" onclick="exportHTML()" style="margin-top:8px">HTML 파일로 저장</button>
-      <button class="btn-kakao" onclick="shareKakao()">카카오톡으로 PDF 공유</button>
+
     </div>
 
   </div>
@@ -667,14 +668,7 @@ Content to translate:
 
     showToast('영문 번역 완료! PDF 미리보기를 열고 있습니다...');
     // 번역 완료 후 바로 PDF 웹 미리보기 열기
-    setTimeout(()=>openPrintWindow(getFormData()), 600);
-  }catch(e){
-    showToast('번역 오류: '+e.message);
-  }finally{
-    document.getElementById('translateBtn').disabled=false;
-    document.getElementById('translateLoading').style.display='none';
-  }
-};
+
 async function groqCall(prompt, maxTokens=1000){
   const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
@@ -764,7 +758,7 @@ async function renderList(){
         <div class="minutes-btns">
           <button class="btn-sm" onclick="loadMinutes('${m.id}')">불러오기</button>
           <button class="btn-sm" onclick="downloadPDF('${m.id}')">PDF</button>
-          <button class="btn-sm" onclick="shareItem('${m.id}')">카카오톡</button>
+  
           <button class="btn-sm-danger" onclick="deleteMinutes('${m.id}')">삭제</button>
         </div>
       </div>`).join('');
