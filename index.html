@@ -76,7 +76,9 @@ audio{width:100%;border-radius:10px;margin-top:8px}
     <p class="sub">녹음 → AI 회의록 생성 → Firebase 온라인 저장</p>
   </div>
 
-  
+  <div class="card" id="fbSetupCard">
+    <div id="fbStatus" class="fb-status"></div>
+  </div>
 
   <!-- 탭 -->
   <div class="card" style="padding:0 20px">
@@ -170,21 +172,14 @@ const GROQ_API_KEY = 'YOUR_GROQ_API_KEY';
    Firebase Console → 프로젝트 설정 → 앱 추가 → firebaseConfig 복사
    ═══════════════════════════════════════════════ */
 const firebaseConfig = {
-  apiKey: "AIzaSyCprFdE4--bPbMkWlfmhGWwwdMb9vW_am8",
-  authDomain: "meeting-minute-204a2.firebaseapp.com",
-  projectId: "meeting-minute-204a2",
-  storageBucket: "meeting-minute-204a2.firebasestorage.app",
-  messagingSenderId: "644166640712",
-  appId: "1:644166640712:web:bb6cf34f0754deb62c647d"
+  apiKey:            "YOUR_FIREBASE_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
 };
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-
-
-  
 /* ── Firebase 초기화 ── */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query }
@@ -333,23 +328,41 @@ let mediaRecorder, audioChunks=[], recTimer, recSecs=0, recOn=false;
 let recognition=null, finalText='', interimText='';
 const pad=n=>String(n).padStart(2,'0');
 
-window.toggleRec = async function(){ recOn ? stopRec() : await startRec(); };
+window.toggleRec = async function(){
+  try { recOn ? stopRec() : await startRec(); }
+  catch(e){ showErr('녹음 오류: '+e.message); }
+};
 
 async function startRec(){
+  // 마이크 지원 여부 확인
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showErr('이 브라우저는 마이크를 지원하지 않습니다. Safari 또는 Chrome을 사용해주세요.');
+    return;
+  }
   let stream;
-  try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
-  catch(e){ showErr('마이크 권한이 필요합니다: '+e.message); return; }
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+  } catch(e){
+    if(e.name==='NotAllowedError') showErr('마이크 권한이 거부됐습니다. 브라우저 설정에서 마이크 권한을 허용해주세요.');
+    else if(e.name==='NotFoundError') showErr('마이크를 찾을 수 없습니다. 마이크가 연결되어 있는지 확인해주세요.');
+    else showErr('마이크 오류: '+e.message);
+    return;
+  }
   audioChunks=[];
-  const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(t=>MediaRecorder.isTypeSupported(t))||'';
-  try{ mediaRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:{}); }
+  // 아이폰 Safari는 audio/mp4만 지원
+  const mime=['audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg'].find(t=>{
+    try{ return MediaRecorder.isTypeSupported(t); } catch(e){ return false; }
+  })||'';
+  try{ mediaRecorder=new MediaRecorder(stream, mime?{mimeType:mime}:{}); }
   catch(e){ mediaRecorder=new MediaRecorder(stream); }
-  mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) audioChunks.push(e.data); };
+  mediaRecorder.ondataavailable=e=>{ if(e.data&&e.data.size>0) audioChunks.push(e.data); };
   mediaRecorder.onstop=()=>{
-    const blob=new Blob(audioChunks,{type:mediaRecorder.mimeType||'audio/webm'});
+    const blob=new Blob(audioChunks,{type:mediaRecorder.mimeType||'audio/mp4'});
     document.getElementById('audioEl').src=URL.createObjectURL(blob);
     document.getElementById('audioWrap').style.display='block';
     stream.getTracks().forEach(t=>t.stop());
   };
+  mediaRecorder.onerror=e=>{ showErr('녹음 중 오류: '+e.error?.message); };
   mediaRecorder.start(500);
   finalText=''; interimText='';
   startSTT();
